@@ -1,0 +1,26 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: quizup-game
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quizup_game
+    username: postgres
+    password: postgres
+
+  flyway:
+    locations: classpath:db/migration/game
+
+axon:
+  distributed:
+    enabled: true
+
+microservice:
+  swagger:
+    description: QuizUp Game Module - Game sessions and gameplay management
+
+logging:
+  level:
+    io.github.quizup: DEBUG
