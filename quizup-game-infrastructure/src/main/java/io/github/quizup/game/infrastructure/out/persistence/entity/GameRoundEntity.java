@@ -16,7 +16,6 @@ import lombok.Setter;
 @Table(name = "round_entry")
 public class GameRoundEntity {
 
-    // Getters & Setters
     @Id
     @Column(name = "id", nullable = false)
     private String id;

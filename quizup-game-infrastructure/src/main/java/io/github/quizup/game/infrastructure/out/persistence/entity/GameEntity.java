@@ -22,7 +22,6 @@ import java.util.List;
 @Table(name = "game_entry")
 public class GameEntity {
 
-    // Getters & Setters
     @Id
     @Searchable(type = FieldType.STRING)
     @Column(name = "game_id", nullable = false)

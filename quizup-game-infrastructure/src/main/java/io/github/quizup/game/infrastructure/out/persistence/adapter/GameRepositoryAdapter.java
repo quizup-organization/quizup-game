@@ -62,6 +62,7 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<Game> findAll(SearchCriteria searchCriteria) {
         return gameJpaSearchAdapter.findAll(searchCriteria)
                 .map(GameEntityMapper::toDomain);

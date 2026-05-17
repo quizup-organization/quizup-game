@@ -1,14 +1,8 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: quizup-game
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/quizup_game
-    username: postgres
-    password: postgres
+  profiles:
+    default: local
 
   flyway:
     locations: classpath:db/migration/game
@@ -23,4 +17,4 @@ microservice:
 
 logging:
   level:
-    io.github.quizup: DEBUG
+    io.github.quizup: ${QUIZUP_LOG_LEVEL:INFO}
