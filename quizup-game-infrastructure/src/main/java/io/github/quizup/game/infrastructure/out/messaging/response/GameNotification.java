@@ -1,8 +1,8 @@
 package io.github.quizup.game.infrastructure.out.messaging.response;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import io.github.quizup.topic.domain.model.QuestionChoice;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.github.quizup.game.domain.model.GameQuestionChoice;
 
 import java.time.Instant;
 import java.util.Map;
@@ -83,7 +83,7 @@ public interface GameNotification {
             String gameId,
             String round,
             String playerId,
-            QuestionChoice choice,
+            GameQuestionChoice choice,
             boolean correct,
             int pointsEarned,
             Instant answeredAt

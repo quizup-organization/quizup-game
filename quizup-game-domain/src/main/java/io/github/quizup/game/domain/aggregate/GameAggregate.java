@@ -4,7 +4,7 @@ import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.game.domain.port.out.QuestionPort;
+import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import org.apache.commons.lang3.StringUtils;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -51,7 +51,7 @@ public class GameAggregate {
     // =============================================
 
     @CommandHandler
-    public GameAggregate(GameCommand.CreateGameCommand command, QuestionPort questionRepositoryPort) {
+    public GameAggregate(GameCommand.CreateGameCommand command, QuestionRepositoryPort questionRepositoryPort) {
         logger.info("Creating game: gameId={}, topicId={}, player1={}, player2={}, mode={}, player2Type={}",
                 command.gameId(), command.topicId(), command.player1Id(), command.player2Id(), command.mode(), command.player2Type());
 

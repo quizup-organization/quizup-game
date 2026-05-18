@@ -10,8 +10,8 @@ public interface AnswerQuestionUseCase {
 
     CompletableFuture<String> answer(GameCommand.AnswerQuestionCommand command);
 
-    default CompletableFuture<String> answer(String gameId, String playerId, GameQuestionChoice choice, Instant timestamp) {
-        return answer(new GameCommand.AnswerQuestionCommand(gameId, playerId, choice, timestamp));
+    default CompletableFuture<String> answer(String gameId, String playerId, GameQuestionChoice choice) {
+        return answer(new GameCommand.AnswerQuestionCommand(gameId, playerId, choice, Instant.now()));
     }
 }
 

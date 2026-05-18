@@ -6,7 +6,6 @@ import io.github.quizup.common.infrastructure.mapper.SearchResponseMapper;
 import io.github.quizup.game.domain.model.Game;
 import io.github.quizup.game.domain.model.GameRound;
 import io.github.quizup.game.domain.model.GameRoundStatus;
-import io.github.quizup.game.infrastructure.mapper.GameQuestionChoiceMapper;
 import io.github.quizup.game.infrastructure.in.api.response.GameResponse;
 import io.github.quizup.game.infrastructure.in.api.response.GameRoundResponse;
 
@@ -37,11 +36,11 @@ public final class GameResponseMapper {
                 round.round(),
                 round.questionText(),
                 round.status(),
-                GameQuestionChoiceMapper.toTopic(round.player1Choice()),
+                round.player1Choice(),
                 round.player1Points(),
-                GameQuestionChoiceMapper.toTopic(round.player2Choice()),
+                round.player2Choice(),
                 round.player2Points(),
-                round.status() == GameRoundStatus.CLOSED ? GameQuestionChoiceMapper.toTopic(round.correctAnswer()) : null
+                round.status() == GameRoundStatus.CLOSED ? round.correctAnswer() : null
         );
     }
 

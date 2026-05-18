@@ -4,7 +4,7 @@ import io.github.quizup.game.domain.model.GameQuestion;
 
 import java.util.List;
 
-public interface QuestionPort {
+public interface QuestionRepositoryPort {
 
     List<GameQuestion> findRandomApprovedByTopicId(String topicId, int count);
 }

@@ -168,14 +168,12 @@ public class GameController {
 
         logger.info("Answering question: gameId={}, playerId={}, choice={}", gameId, playerId, request.choice());
 
-        GameCommand.AnswerQuestionCommand command = new GameCommand.AnswerQuestionCommand(
-                gameId,
-                playerId,
-                GameQuestionChoice.valueOf(request.choice().name()),
-                Instant.now()
-        );
 
-        return answerQuestionUseCase.answer(command)
+        return answerQuestionUseCase.answer(
+                        gameId,
+                        playerId,
+                        request.choice()
+                )
                 .thenApply(ResponseEntityBuilder::ok);
     }
 
