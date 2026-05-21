@@ -7,28 +7,23 @@ import io.github.quizup.common.infrastructure.in.api.request.SearchRequest;
 import io.github.quizup.common.infrastructure.in.api.response.IdResponse;
 import io.github.quizup.common.infrastructure.in.api.response.PageResponse;
 import io.github.quizup.common.infrastructure.mapper.SearchRequestMapper;
-import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
-import io.github.quizup.game.domain.model.GameQuestionChoice;
-import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.domain.port.in.*;
 import io.github.quizup.game.infrastructure.in.api.mapper.GameResponseMapper;
 import io.github.quizup.game.infrastructure.in.api.request.AnswerQuestionRequest;
 import io.github.quizup.game.infrastructure.in.api.request.CreateBotGameRequest;
+import io.github.quizup.game.infrastructure.in.api.request.JoinGameRequest;
 import io.github.quizup.game.infrastructure.in.api.response.GameResponse;
 import io.github.quizup.game.infrastructure.out.messaging.mapper.GameEventNotificationMapper;
 import io.github.quizup.game.infrastructure.out.messaging.response.GameNotification;
-import io.github.quizup.microservice.infrastructure.security.SecurityHelper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -87,35 +82,16 @@ public class GameController {
      */
     @PostMapping
     public CompletableFuture<ResponseEntity<IdResponse>> createBotGame(@RequestBody @Valid CreateBotGameRequest request) {
-
-        String playerId = SecurityHelper.getUserId();
         String gameId = UUID.randomUUID().toString();
-
-        logger.info("Creating bot game: gameId={}, topicId={}, playerId={}", gameId, request.topicId(), playerId);
-
         return createGameUseCase.create(
                         gameId,
                         request.topicId(),
-                        playerId,
+                        request.playerId(),
                         QuizUpConstants.BOT_USER_ID,
                         GameMode.SYNC,
                         GamePlayerType.BOT
                 )
                 .thenApply(aggregateId -> ResponseEntityBuilder.creation(ENDPOINT, aggregateId));
-    }
-
-    /**
-     * Récupérer les parties de l'utilisateur connecté
-     */
-    @GetMapping
-    public CompletableFuture<ResponseEntity<List<GameResponse>>> getGamesForUser(@RequestParam(required = false) GameStatus status) {
-
-        String userId = SecurityHelper.getUserId();
-        logger.debug("Getting games for userId={}, status={}", userId, status);
-
-        return getGamesByUserUseCase.getByUser(userId, status)
-                .thenApply(games -> games.stream().map(GameResponseMapper::toResponse).toList())
-                .thenApply(ResponseEntity::ok);
     }
 
     /**
@@ -131,7 +107,7 @@ public class GameController {
 
 
     /**
-     * Récupérer l'état complet d'une partie (game + rounds)
+     * Récupérer les événements d'une partie
      */
     @GetMapping("/{gameId}/notifications")
     public CompletableFuture<ResponseEntity<Collection<GameNotification>>> getGameNotificationsById(@PathVariable String gameId) {
@@ -149,12 +125,8 @@ public class GameController {
      * Quand les 2 joueurs ont rejoint → la partie est READY.
      */
     @PostMapping("/{gameId}/join")
-    public CompletableFuture<ResponseEntity<IdResponse>> joinGame(@PathVariable String gameId) {
-
-        String playerId = SecurityHelper.getUserId();
-        logger.info("Joining game: gameId={}, playerId={}", gameId, playerId);
-
-        return joinGameUseCase.join(gameId, playerId)
+    public CompletableFuture<ResponseEntity<IdResponse>> joinGame(@PathVariable String gameId, @RequestBody @Valid JoinGameRequest request) {
+        return joinGameUseCase.join(gameId, request.playerId())
                 .thenApply(ResponseEntityBuilder::ok);
     }
 
@@ -163,31 +135,11 @@ public class GameController {
      */
     @PostMapping("/{gameId}/answer")
     public CompletableFuture<ResponseEntity<IdResponse>> answerQuestion(@PathVariable String gameId, @RequestBody @Valid AnswerQuestionRequest request) {
-
-        String playerId = SecurityHelper.getUserId();
-
-        logger.info("Answering question: gameId={}, playerId={}, choice={}", gameId, playerId, request.choice());
-
-
         return answerQuestionUseCase.answer(
                         gameId,
-                        playerId,
+                        request.playerId(),
                         request.choice()
                 )
-                .thenApply(ResponseEntityBuilder::ok);
-    }
-
-    /**
-     * Annuler une partie
-     */
-    @PostMapping("/{gameId}/cancel")
-    public CompletableFuture<ResponseEntity<IdResponse>> cancelGame(
-            @PathVariable String gameId,
-            @RequestParam(defaultValue = "Annulée par le joueur") String reason) {
-
-        logger.info("Canceling game: gameId={}, reason={}", gameId, reason);
-
-        return cancelGameUseCase.cancel(gameId, reason)
                 .thenApply(ResponseEntityBuilder::ok);
     }
 }
