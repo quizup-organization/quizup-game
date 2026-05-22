@@ -27,6 +27,14 @@ public interface GameEvent {
     ) implements GameEvent {
     }
 
+    record GameLeftEvent(
+            String gameId,
+            String playerId,
+            String reason,
+            Instant leftAt
+    ) implements GameEvent {
+    }
+
     record GameStartedEvent(
             String gameId,
             GameMode mode,

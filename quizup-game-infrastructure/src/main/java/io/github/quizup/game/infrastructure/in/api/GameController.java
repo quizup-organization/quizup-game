@@ -39,26 +39,20 @@ public class GameController {
     private final CreateGameUseCase createGameUseCase;
     private final JoinGameUseCase joinGameUseCase;
     private final AnswerQuestionUseCase answerQuestionUseCase;
-    private final CancelGameUseCase cancelGameUseCase;
     private final GetGameUseCase getGameUseCase;
-    private final GetGamesByUserUseCase getGamesByUserUseCase;
     private final GetGameEventsUseCase getGameEventsUseCase;
     private final SearchGameUseCase searchGameUseCase;
 
     public GameController(CreateGameUseCase createGameUseCase,
                           JoinGameUseCase joinGameUseCase,
                           AnswerQuestionUseCase answerQuestionUseCase,
-                          CancelGameUseCase cancelGameUseCase,
                           GetGameUseCase getGameUseCase,
-                          GetGamesByUserUseCase getGamesByUserUseCase,
                           GetGameEventsUseCase getGameEventsUseCase,
                           SearchGameUseCase searchGameUseCase) {
         this.createGameUseCase = createGameUseCase;
         this.joinGameUseCase = joinGameUseCase;
         this.answerQuestionUseCase = answerQuestionUseCase;
-        this.cancelGameUseCase = cancelGameUseCase;
         this.getGameUseCase = getGameUseCase;
-        this.getGamesByUserUseCase = getGamesByUserUseCase;
         this.getGameEventsUseCase = getGameEventsUseCase;
         this.searchGameUseCase = searchGameUseCase;
     }

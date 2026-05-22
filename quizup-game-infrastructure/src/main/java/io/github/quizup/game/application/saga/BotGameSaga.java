@@ -24,6 +24,7 @@ import java.util.Random;
 
 @Saga
 public class BotGameSaga {
+
     private static final double BOT_CORRECT_PROBABILITY = 0.6;
     private static final Random RANDOM = new Random();
     private static final Logger logger = LoggerFactory.getLogger(BotGameSaga.class);

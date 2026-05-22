@@ -264,7 +264,7 @@ public class GameAggregate {
             winner = player1.getPlayerId();
         } else if (player2.getScore() > player1.getScore()) {
             winner = player2.getPlayerId();
-        }
+        } // else it's a tie, winner remains null
 
         apply(
                 new GameEvent.GameEndedEvent(
