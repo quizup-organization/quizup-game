@@ -272,8 +272,11 @@ public class GameAggregate {
                 new GameEvent.GameEndedEvent(
                         gameId, winner,
                         player1.getPlayerId(),
+                        player1.getPlayerName(),
                         player2.getPlayerId(),
-                        topicId, player1.getScore(),
+                        player2.getPlayerName(),
+                        topicId,
+                        player1.getScore(),
                         player2.getScore(),
                         Instant.now()
                 )
