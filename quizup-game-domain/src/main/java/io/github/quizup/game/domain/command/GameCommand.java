@@ -19,7 +19,9 @@ public interface GameCommand {
             @TargetAggregateIdentifier String gameId,
             String topicId,
             String player1Id,
+            String player1Name,
             String player2Id,
+            String player2Name,
             GameMode mode,
             GamePlayerType player2Type
     ) implements GameCommand {

@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotBlank;
 public record CreateBotGameRequest(
         @NotBlank String topicId,
 
-        @NotBlank String playerId
+        @NotBlank String playerId,
+
+        @NotBlank String playerName
 ) {
 }
 

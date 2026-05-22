@@ -11,12 +11,25 @@ public interface CreateGameUseCase {
     CompletableFuture<String> create(GameCommand.CreateGameCommand command);
 
     default CompletableFuture<String> create(String gameId,
-                                           String topicId,
-                                           String player1Id,
-                                           String player2Id,
-                                           GameMode mode,
-                                           GamePlayerType player2Type) {
-        return create(new GameCommand.CreateGameCommand(gameId, topicId, player1Id, player2Id, mode, player2Type));
+                                             String topicId,
+                                             String player1Id,
+                                             String player1Name,
+                                             String player2Id,
+                                             String player2Name,
+                                             GameMode mode,
+                                             GamePlayerType player2Type) {
+        return create(
+                new GameCommand.CreateGameCommand(
+                        gameId,
+                        topicId,
+                        player1Id,
+                        player1Name,
+                        player2Id,
+                        player2Name,
+                        mode,
+                        player2Type
+                )
+        );
     }
 }
 

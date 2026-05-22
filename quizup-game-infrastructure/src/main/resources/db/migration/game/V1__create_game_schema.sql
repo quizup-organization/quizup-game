@@ -5,7 +5,9 @@ CREATE TABLE game_entry (
     game_id       VARCHAR(255)  NOT NULL,
     topic_id      VARCHAR(255)  NOT NULL,
     player1_id    VARCHAR(255)  NOT NULL,
-    player2_id    VARCHAR(255),
+    player1_name  VARCHAR(255)  NOT NULL,
+    player2_id    VARCHAR(255)  NOT NULL,
+    player2_name  VARCHAR(255)  NOT NULL,
     mode          VARCHAR(10)   NOT NULL,   -- SYNC, ASYNC
     player2Type   VARCHAR(10)   NOT NULL,   -- BOT, HUMAN
     status        VARCHAR(20)   NOT NULL,   -- CREATED, READY, IN_PROGRESS, FINISHED, CANCELED

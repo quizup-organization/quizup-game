@@ -77,7 +77,9 @@ public class GameAggregate {
                         command.gameId(),
                         command.topicId(),
                         command.player1Id(),
+                        command.player1Name(),
                         command.player2Id(),
+                        command.player2Name(),
                         command.player2Type(),
                         command.mode(),
                         questions,
@@ -303,8 +305,8 @@ public class GameAggregate {
         this.status = GameStatus.CREATED;
         this.currentRound = GameRoundType.ROUND_1;
 
-        players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), GamePlayerType.HUMAN));
-        players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Type()));
+        players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), event.player1Name(), GamePlayerType.HUMAN));
+        players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Name(), event.player2Type()));
 
         GameRoundType[] allRounds = GameRoundType.values();
 
