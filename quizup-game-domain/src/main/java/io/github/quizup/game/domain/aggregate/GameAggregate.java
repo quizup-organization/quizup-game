@@ -270,7 +270,8 @@ public class GameAggregate {
 
         apply(
                 new GameEvent.GameEndedEvent(
-                        gameId, winner,
+                        gameId,
+                        winner,
                         player1.getPlayerId(),
                         player1.getPlayerName(),
                         player2.getPlayerId(),
