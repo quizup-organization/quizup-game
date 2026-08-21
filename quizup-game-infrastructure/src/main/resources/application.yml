@@ -1,15 +1,12 @@
 spring:
-  application:
-    name: quizup-game
   profiles:
     default: local
 
+  application:
+    name: quizup-game
+
   flyway:
     locations: classpath:db/migration/game
-
-axon:
-  distributed:
-    enabled: true
 
 microservice:
   swagger:

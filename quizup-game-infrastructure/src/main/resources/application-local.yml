@@ -6,12 +6,21 @@ spring:
     activate:
       on-profile: local
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
   datasource:
     url: jdbc:postgresql://localhost:5432/quizup_game
     username: postgres
     password: postgres
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+
 logging:
   level:
     io.github.quizup: DEBUG
+
+
 
