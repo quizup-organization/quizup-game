@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.quizup</groupId>
         <artifactId>quizup-game</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -24,14 +24,14 @@
         <dependency>
             <groupId>io.github.quizup</groupId>
             <artifactId>quizup-theme-domain</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <!-- STARTER -->
         <dependency>
             <groupId>io.github.quizup</groupId>
-            <artifactId>quizup-starter</artifactId>
+            <artifactId>quizup-microservice-starter</artifactId>
         </dependency>
     </dependencies>
 

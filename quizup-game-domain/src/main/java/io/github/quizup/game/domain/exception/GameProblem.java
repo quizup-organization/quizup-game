@@ -1,7 +1,7 @@
 package io.github.quizup.game.domain.exception;
 
-import io.github.quizup.common.domain.exception.BaseProblem;
-import io.github.quizup.common.domain.exception.ProblemCategory;
+import io.github.quizup.microservice.core.domain.exception.BaseProblem;
+import io.github.quizup.microservice.core.domain.exception.ProblemCategory;
 import lombok.Getter;
 
 import java.util.HashMap;

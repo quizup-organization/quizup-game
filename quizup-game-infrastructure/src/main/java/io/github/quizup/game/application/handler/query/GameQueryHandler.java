@@ -1,6 +1,6 @@
 package io.github.quizup.game.application.handler.query;
 
-import io.github.quizup.common.domain.model.search.PageResult;
+import io.github.quizup.microservice.core.domain.model.search.PageResult;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.Game;

@@ -1,8 +1,8 @@
 package io.github.quizup.game.infrastructure.in.api.mapper;
 
-import io.github.quizup.common.domain.model.search.PageResult;
-import io.github.quizup.common.infrastructure.in.api.response.PageResponse;
-import io.github.quizup.common.infrastructure.mapper.SearchResponseMapper;
+import io.github.quizup.microservice.core.domain.model.search.PageResult;
+import io.github.quizup.microservice.core.infrastructure.in.api.response.PageResponse;
+import io.github.quizup.microservice.core.infrastructure.mapper.SearchResponseMapper;
 import io.github.quizup.game.domain.model.Game;
 import io.github.quizup.game.domain.model.GameRound;
 import io.github.quizup.game.domain.model.GameRoundStatus;

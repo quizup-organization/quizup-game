@@ -1,7 +1,7 @@
 package io.github.quizup.game.infrastructure.out.persistence.entity;
 
-import io.github.quizup.common.domain.model.search.FieldType;
-import io.github.quizup.common.domain.model.search.Searchable;
+import io.github.quizup.microservice.core.domain.model.search.FieldType;
+import io.github.quizup.microservice.core.domain.model.search.Searchable;
 import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameStatus;

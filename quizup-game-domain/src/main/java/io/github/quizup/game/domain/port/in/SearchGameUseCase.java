@@ -1,9 +1,9 @@
 package io.github.quizup.game.domain.port.in;
 
-import io.github.quizup.common.domain.model.search.FilterCriteria;
-import io.github.quizup.common.domain.model.search.PageCriteria;
-import io.github.quizup.common.domain.model.search.PageResult;
-import io.github.quizup.common.domain.model.search.SortCriteria;
+import io.github.quizup.microservice.core.domain.model.search.FilterCriteria;
+import io.github.quizup.microservice.core.domain.model.search.PageCriteria;
+import io.github.quizup.microservice.core.domain.model.search.PageResult;
+import io.github.quizup.microservice.core.domain.model.search.SortCriteria;
 import io.github.quizup.game.domain.model.Game;
 import io.github.quizup.game.domain.query.GameQuery;
 

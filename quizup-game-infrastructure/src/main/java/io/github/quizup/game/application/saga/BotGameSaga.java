@@ -1,6 +1,6 @@
 package io.github.quizup.game.application.saga;
 
-import io.github.quizup.common.domain.constant.QuizUpConstants;
+import io.github.quizup.microservice.core.domain.constant.QuizUpConstants;
 import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.*;
