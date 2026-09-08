@@ -1,7 +1,6 @@
 package io.github.quizup.game.infrastructure.out.messaging.mapper;
 
 import io.github.quizup.game.domain.event.GameEvent;
-import io.github.quizup.game.infrastructure.mapper.GameQuestionChoiceMapper;
 import io.github.quizup.game.infrastructure.out.messaging.response.GameNotification;
 
 import java.util.LinkedHashMap;
@@ -65,7 +64,7 @@ public final class GameEventNotificationMapper {
                             questionAnsweredEvent.gameId(),
                             questionAnsweredEvent.round().name(),
                             questionAnsweredEvent.playerId(),
-                            GameQuestionChoiceMapper.toTopic(questionAnsweredEvent.choice()),
+                            questionAnsweredEvent.choice(),
                             questionAnsweredEvent.correct(),
                             questionAnsweredEvent.pointsEarned(),
                             questionAnsweredEvent.answeredAt()

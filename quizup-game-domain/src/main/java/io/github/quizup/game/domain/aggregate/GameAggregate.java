@@ -4,7 +4,7 @@ import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.game.domain.port.out.QuestionPort;
+import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import org.apache.commons.lang3.StringUtils;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -51,7 +51,7 @@ public class GameAggregate {
     // =============================================
 
     @CommandHandler
-    public GameAggregate(GameCommand.CreateGameCommand command, QuestionPort questionRepositoryPort) {
+    public GameAggregate(GameCommand.CreateGameCommand command, QuestionRepositoryPort questionRepositoryPort) {
         logger.info("Creating game: gameId={}, topicId={}, player1={}, player2={}, mode={}, player2Type={}",
                 command.gameId(), command.topicId(), command.player1Id(), command.player2Id(), command.mode(), command.player2Type());
 
@@ -77,7 +77,9 @@ public class GameAggregate {
                         command.gameId(),
                         command.topicId(),
                         command.player1Id(),
+                        command.player1Name(),
                         command.player2Id(),
+                        command.player2Name(),
                         command.player2Type(),
                         command.mode(),
                         questions,
@@ -264,14 +266,18 @@ public class GameAggregate {
             winner = player1.getPlayerId();
         } else if (player2.getScore() > player1.getScore()) {
             winner = player2.getPlayerId();
-        }
+        } // else it's a tie, winner remains null
 
         apply(
                 new GameEvent.GameEndedEvent(
-                        gameId, winner,
+                        gameId,
+                        winner,
                         player1.getPlayerId(),
+                        player1.getPlayerName(),
                         player2.getPlayerId(),
-                        topicId, player1.getScore(),
+                        player2.getPlayerName(),
+                        topicId,
+                        player1.getScore(),
                         player2.getScore(),
                         Instant.now()
                 )
@@ -303,8 +309,8 @@ public class GameAggregate {
         this.status = GameStatus.CREATED;
         this.currentRound = GameRoundType.ROUND_1;
 
-        players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), GamePlayerType.HUMAN));
-        players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Type()));
+        players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), event.player1Name(), GamePlayerType.HUMAN));
+        players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Name(), event.player2Type()));
 
         GameRoundType[] allRounds = GameRoundType.values();
 

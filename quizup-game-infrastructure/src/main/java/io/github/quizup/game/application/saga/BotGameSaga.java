@@ -4,7 +4,7 @@ import io.github.quizup.common.domain.constant.QuizUpConstants;
 import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.topic.domain.model.QuestionChoice;
+import io.github.quizup.theme.domain.model.QuestionChoice;
 import lombok.Getter;
 import lombok.Setter;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -24,6 +24,7 @@ import java.util.Random;
 
 @Saga
 public class BotGameSaga {
+
     private static final double BOT_CORRECT_PROBABILITY = 0.6;
     private static final Random RANDOM = new Random();
     private static final Logger logger = LoggerFactory.getLogger(BotGameSaga.class);

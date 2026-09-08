@@ -6,7 +6,11 @@ import jakarta.validation.constraints.NotBlank;
  * DTO de requête pour créer une partie contre un bot.
  */
 public record CreateBotGameRequest(
-        @NotBlank String topicId
+        @NotBlank String topicId,
+
+        @NotBlank String playerId,
+
+        @NotBlank String playerName
 ) {
 }
 

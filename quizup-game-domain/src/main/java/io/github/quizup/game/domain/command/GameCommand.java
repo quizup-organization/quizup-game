@@ -19,7 +19,9 @@ public interface GameCommand {
             @TargetAggregateIdentifier String gameId,
             String topicId,
             String player1Id,
+            String player1Name,
             String player2Id,
+            String player2Name,
             GameMode mode,
             GamePlayerType player2Type
     ) implements GameCommand {
@@ -32,6 +34,13 @@ public interface GameCommand {
     record JoinGameCommand(
             @TargetAggregateIdentifier String gameId,
             String playerId
+    ) implements GameCommand {
+    }
+
+    record LeaveGameCommand(
+            @TargetAggregateIdentifier String gameId,
+            String playerId,
+            String reason
     ) implements GameCommand {
     }
 

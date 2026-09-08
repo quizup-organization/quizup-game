@@ -36,8 +36,16 @@ public class GameEntity {
     private String player1Id;
 
     @Searchable(type = FieldType.STRING)
+    @Column(name = "player1_name", nullable = false)
+    private String player1Name;
+
+    @Searchable(type = FieldType.STRING)
     @Column(name = "player2_id")
     private String player2Id;
+
+    @Searchable(type = FieldType.STRING)
+    @Column(name = "player2_name")
+    private String player2Name;
 
     @Searchable(type = FieldType.STRING)
     @Enumerated(EnumType.STRING)

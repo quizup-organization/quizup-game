@@ -12,7 +12,9 @@ public interface GameEvent {
             String gameId,
             String topicId,
             String player1Id,
+            String player1Name,
             String player2Id,
+            String player2Name,
             GamePlayerType player2Type,
             GameMode mode,
             List<GameQuestion> questions,
@@ -24,6 +26,14 @@ public interface GameEvent {
             String gameId,
             String playerId,
             Instant joinedAt
+    ) implements GameEvent {
+    }
+
+    record GameLeftEvent(
+            String gameId,
+            String playerId,
+            String reason,
+            Instant leftAt
     ) implements GameEvent {
     }
 
@@ -71,7 +81,9 @@ public interface GameEvent {
             String gameId,
             String winnerId,
             String player1Id,
+            String player1Name,
             String player2Id,
+            String player2Name,
             String topicId,
             int player1FinalScore,
             int player2FinalScore,

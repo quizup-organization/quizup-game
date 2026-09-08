@@ -1,8 +1,9 @@
 package io.github.quizup.game.infrastructure.out.persistence.entity;
 
+import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.game.domain.model.GameRoundType;
 import io.github.quizup.game.domain.model.GameRoundStatus;
-import io.github.quizup.topic.domain.model.QuestionChoice;
+import io.github.quizup.theme.domain.model.QuestionChoice;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,11 +37,11 @@ public class GameRoundEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "correct_answer", nullable = false, length = 5)
-    private QuestionChoice correctAnswer;
+    private GameQuestionChoice correctAnswer;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "player1_choice", length = 5)
-    private QuestionChoice player1Choice;
+    private GameQuestionChoice player1Choice;
 
     @Column(name = "player1_time_ms")
     private Long player1TimeMs;
@@ -50,7 +51,7 @@ public class GameRoundEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "player2_choice", length = 5)
-    private QuestionChoice player2Choice;
+    private GameQuestionChoice player2Choice;
 
     @Column(name = "player2_time_ms")
     private Long player2TimeMs;

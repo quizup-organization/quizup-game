@@ -6,6 +6,9 @@ package io.github.quizup.game.domain.model;
  * la cohérence dans tout le système.
  */
 public final class GameRules {
+    private GameRules() {
+        // Classe utilitaire, pas d'instanciation
+    }
 
     public static final int TOTAL_ROUNDS = 7;
 
@@ -30,10 +33,6 @@ public final class GameRules {
      * Durée du timeout d'un round en secondes
      */
     public static final long ROUND_TIMEOUT_SECONDS = 10;
-
-    private GameRules() {
-        // Classe utilitaire, pas d'instanciation
-    }
 
     /**
      * Calcule le bonus de vitesse en fonction du temps de réponse

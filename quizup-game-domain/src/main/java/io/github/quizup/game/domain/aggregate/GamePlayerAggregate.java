@@ -13,6 +13,8 @@ public class GamePlayerAggregate {
 
     private final GamePlayer player;
 
+    private final String playerName;
+
     private final String playerId;
 
     private final GamePlayerType playerType;
@@ -21,9 +23,10 @@ public class GamePlayerAggregate {
 
     private int score;
 
-    public GamePlayerAggregate(GamePlayer player, String playerId, GamePlayerType playerType) {
+    public GamePlayerAggregate(GamePlayer player, String playerId, String playerName, GamePlayerType playerType) {
         this.player = player;
         this.playerId = playerId;
+        this.playerName = playerName;
         this.playerType = playerType;
         this.present = false;
         this.score = 0;
@@ -34,6 +37,13 @@ public class GamePlayerAggregate {
      */
     public void join() {
         this.present = true;
+    }
+
+    /**
+     * Marque le joueur comme absent dans la partie.
+     */
+    public void leave() {
+        this.present = false;
     }
 
     /**
