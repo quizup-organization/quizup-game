@@ -70,6 +70,12 @@ via `GameQuestionMapper.toGameQuestion`).
   `POST /games/{gameId}/cancel` (query param `reason`), mais **pas d'endpoint** correspondant dans
   `GameController`. `CancelGameUseCase` existe en port/in mais n'est pas exposé en REST. **À vérifier** : soit ajouter
   l'endpoint, soit le frontend devrait utiliser un autre mécanisme.
+- **Placement du port inter-service** : `QuestionRepositoryAdapter` (package
+  `infrastructure/out/question/adapter/`) implémente `QuestionRepositoryPort` (→ quizup-theme)
+  mais importe des types `io.github.quizup.theme.domain.*` (`Question`, `QuestionQuery`).
+  La spec §2.7 exige que l'implémentation d'un port sortant inter-modules soit dans
+  `application/service/` et ne retourne que des types **locaux** (`GameQuestion`). → **À corriger** :
+  déplacer vers `application/service/QuestionService`.
 
 ---
 
