@@ -1,0 +1,24 @@
+spring:
+  profiles:
+    default: local
+
+  application:
+    name: quizup-game
+
+  flyway:
+    locations: classpath:db/migration/game
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+microservice:
+  swagger:
+    description: QuizUp Game Module - Game sessions and gameplay management
+
+logging:
+  level:
+    io.github.quizup: ${QUIZUP_LOG_LEVEL:INFO}
+    org.apache.kafka: OFF
+    org.springframework.kafka: OFF
