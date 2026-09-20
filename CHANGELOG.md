@@ -1,3 +1,9 @@
+## [1.4.3](https://github.com/quizup-organization/quizup-game/compare/v1.4.2...v1.4.3) (2026-09-20)
+
+### Bug Fixes
+
+* **system:** use the unified system account ([429b753](https://github.com/quizup-organization/quizup-game/commit/429b7532ae8ac62830998f04f76afed03e368adc))
+
 ## [1.4.2](https://github.com/quizup-organization/quizup-game/compare/v1.4.1...v1.4.2) (2026-09-20)
 
 ### Bug Fixes
