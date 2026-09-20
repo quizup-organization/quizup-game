@@ -1,3 +1,9 @@
+## [1.4.5](https://github.com/quizup-organization/quizup-game/compare/v1.4.4...v1.4.5) (2026-09-20)
+
+### Bug Fixes
+
+* **config:** align prod service URLs with quizup-* names ([04bfdaa](https://github.com/quizup-organization/quizup-game/commit/04bfdaa6ba2cb3876b2c7ebb702e462ad1577ad3))
+
 ## [1.4.4](https://github.com/quizup-organization/quizup-game/compare/v1.4.3...v1.4.4) (2026-09-20)
 
 ### Bug Fixes
