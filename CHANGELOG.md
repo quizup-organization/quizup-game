@@ -1,3 +1,9 @@
+## [1.4.6](https://github.com/quizup-organization/quizup-game/compare/v1.4.5...v1.4.6) (2026-09-20)
+
+### Bug Fixes
+
+* **deps:** bump quizup-sdk to 2.1.1 ([c73def8](https://github.com/quizup-organization/quizup-game/commit/c73def85b485be62db16695b004424836350d8c8))
+
 ## [1.4.5](https://github.com/quizup-organization/quizup-game/compare/v1.4.4...v1.4.5) (2026-09-20)
 
 ### Bug Fixes
