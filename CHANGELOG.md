@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/quizup-organization/quizup-game/compare/v1.2.0...v1.3.0) (2026-09-20)
+
+### Features
+
+* **observability:** consume quizup-sdk 1.3.0 (WebSocket metrics) ([8ac3bda](https://github.com/quizup-organization/quizup-game/commit/8ac3bda31021eeaebe9a88e90cd34ce7836c07f6))
+
 ## [1.2.0](https://github.com/quizup-organization/quizup-game/compare/v1.1.0...v1.2.0) (2026-09-20)
 
 ### Features
