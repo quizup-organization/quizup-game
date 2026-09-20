@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/quizup-organization/quizup-game/compare/v1.1.0...v1.2.0) (2026-09-20)
+
+### Features
+
+* **observability:** gameplay KPIs (consume quizup-sdk 1.2.0) ([9401b01](https://github.com/quizup-organization/quizup-game/commit/9401b01fe06e3f3e92da07d07748d9dfb8218c8d))
+
 ## [1.1.0](https://github.com/quizup-organization/quizup-game/compare/v1.0.0...v1.1.0) (2026-09-20)
 
 ### Features
