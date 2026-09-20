@@ -12,7 +12,7 @@
 
 Gestion des **parties** de quiz : création (bot), participation (join), réponse aux questions,
 scoring, annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisateur
-spécial (`QuizUpConstants.BOT_USER_ID`).
+spécial (`QuizUpConstants.SYSTEM_USER_ID`).
 
 **Package** : `io.github.quizup.game`
 

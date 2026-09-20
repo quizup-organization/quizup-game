@@ -104,8 +104,8 @@ public class GameController {
                         request.topicId(),
                         request.playerId(),
                         request.playerName(),
-                        QuizUpConstants.BOT_USER_ID,
-                        QuizUpConstants.BOT_USER_NAME,
+                        QuizUpConstants.SYSTEM_USER_ID,
+                        QuizUpConstants.SYSTEM_USER_NAME,
                         GameMode.SYNC,
                         GamePlayerType.BOT,
                         BotDifficulty.fromOrDefault(request.difficulty())
