@@ -1,3 +1,10 @@
+## [1.4.7](https://github.com/quizup-organization/quizup-game/compare/v1.4.6...v1.4.7) (2026-09-21)
+
+### Bug Fixes
+
+* **game:** recompute live scores from rounds (idempotent) ([d3e7e7c](https://github.com/quizup-organization/quizup-game/commit/d3e7e7cc3b0261e48c6e24f4ba0b005273388074))
+* **observability:** keep readable console logs in local ([47caba2](https://github.com/quizup-organization/quizup-game/commit/47caba279169069f435c7b8b25738d8dd246d629))
+
 ## [1.4.6](https://github.com/quizup-organization/quizup-game/compare/v1.4.5...v1.4.6) (2026-09-20)
 
 ### Bug Fixes
