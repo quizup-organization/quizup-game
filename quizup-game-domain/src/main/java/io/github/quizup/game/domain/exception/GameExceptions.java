@@ -137,16 +137,6 @@ public interface GameExceptions {
         }
     }
 
-    class RoundNotStartedProblem extends GameProblem {
-        public RoundNotStartedProblem(String gameId, String round) {
-            super(gameId, "urn:quizup:game:roundNotStarted",
-                    ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Round not started",
-                    "Round " + round + " in game " + gameId + " has not been started yet",
-                    Map.of("round", round));
-        }
-    }
-
     class RoundNotStartableProblem extends GameProblem {
         public RoundNotStartableProblem(String gameId, String round, String currentStatus) {
             super(gameId, "urn:quizup:game:roundNotStartable",

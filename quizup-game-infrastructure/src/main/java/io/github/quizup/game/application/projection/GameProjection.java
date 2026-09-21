@@ -127,20 +127,24 @@ public class GameProjection {
 
         gameRepositoryPort.findById(event.gameId()).ifPresent(game -> {
             boolean isPlayer1 = event.playerId().equals(game.player1Id());
+            List<GameRound> rounds = updateRound(game.rounds(), event.round(), round -> isPlayer1
+                    ? round.toBuilder()
+                            .player1Choice(event.choice())
+                            .player1Points(event.pointsEarned())
+                            .player1TimeMs(event.timeMs())
+                            .build()
+                    : round.toBuilder()
+                            .player2Choice(event.choice())
+                            .player2Points(event.pointsEarned())
+                            .player2TimeMs(event.timeMs())
+                            .build());
+            // Scores recalculés depuis les rounds (idempotent au rejeu).
+            int player1Score = rounds.stream().mapToInt(GameRound::player1Points).sum();
+            int player2Score = rounds.stream().mapToInt(GameRound::player2Points).sum();
             gameRepositoryPort.save(game.toBuilder()
-                    .player1Score(isPlayer1 ? game.player1Score() + event.pointsEarned() : game.player1Score())
-                    .player2Score(!isPlayer1 ? game.player2Score() + event.pointsEarned() : game.player2Score())
-                    .rounds(updateRound(game.rounds(), event.round(), round -> isPlayer1
-                            ? round.toBuilder()
-                                    .player1Choice(event.choice())
-                                    .player1Points(event.pointsEarned())
-                                    .player1TimeMs(event.timeMs())
-                                    .build()
-                            : round.toBuilder()
-                                    .player2Choice(event.choice())
-                                    .player2Points(event.pointsEarned())
-                                    .player2TimeMs(event.timeMs())
-                                    .build()))
+                    .player1Score(player1Score)
+                    .player2Score(player2Score)
+                    .rounds(rounds)
                     .build());
         });
     }
