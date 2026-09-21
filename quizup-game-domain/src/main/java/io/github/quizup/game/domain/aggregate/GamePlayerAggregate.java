@@ -40,13 +40,6 @@ public class GamePlayerAggregate {
     }
 
     /**
-     * Marque le joueur comme absent dans la partie.
-     */
-    public void leave() {
-        this.present = false;
-    }
-
-    /**
      * Ajoute des points au score du joueur.
      */
     public void addScore(int points) {

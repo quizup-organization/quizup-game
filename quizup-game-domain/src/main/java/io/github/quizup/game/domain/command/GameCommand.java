@@ -42,13 +42,6 @@ public interface GameCommand {
     ) implements GameCommand {
     }
 
-    record LeaveGameCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId,
-            String reason
-    ) implements GameCommand {
-    }
-
     /**
      * Démarre la partie (READY → IN_PROGRESS, ou CREATED → IN_PROGRESS en mode ASYNC).
      */
