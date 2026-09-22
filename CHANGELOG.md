@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/quizup-organization/quizup-game/compare/v1.4.7...v1.5.0) (2026-09-22)
+
+### Features
+
+* **game:** explicit Axon processing groups ([88093e6](https://github.com/quizup-organization/quizup-game/commit/88093e6c84a5ade7207cf90773c7d395f2b97614))
+
 ## [1.4.7](https://github.com/quizup-organization/quizup-game/compare/v1.4.6...v1.4.7) (2026-09-21)
 
 ### Bug Fixes
