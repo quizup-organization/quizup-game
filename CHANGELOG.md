@@ -1,3 +1,9 @@
+## [1.5.3](https://github.com/quizup-organization/quizup-game/compare/v1.5.2...v1.5.3) (2026-09-22)
+
+### Bug Fixes
+
+* **quizup-game:** upgrade quizup-parent to 2.3.3 ([d53a276](https://github.com/quizup-organization/quizup-game/commit/d53a276d2fcfcaa2bf9cb75afc4a578576120f74))
+
 ## [1.5.2](https://github.com/quizup-organization/quizup-game/compare/v1.5.1...v1.5.2) (2026-09-22)
 
 ### Bug Fixes
