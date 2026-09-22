@@ -4,6 +4,7 @@ import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.infrastructure.out.messaging.mapper.GameEventNotificationMapper;
 import io.github.quizup.game.infrastructure.out.messaging.response.GameNotification;
 import io.github.quizup.microservice.core.domain.model.notification.NotificationEnvelope;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.EventMessage;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
  * reconstruire son état de façon déterministe (même contrat que l'historique REST).
  */
 @Service
+@ProcessingGroup("game-notification")
 public class GameNotificationService {
     private static final Logger logger = LoggerFactory.getLogger(GameNotificationService.class);
     private static final String DESTINATION_PREFIX = "/topic/games/";

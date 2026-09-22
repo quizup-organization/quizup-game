@@ -7,6 +7,7 @@ import io.github.quizup.game.domain.port.out.GameEventStorePort;
 import lombok.Getter;
 import lombok.Setter;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
 import org.axonframework.modelling.saga.EndSaga;
@@ -38,6 +39,7 @@ import java.util.Random;
  * {@code answerDeadlineAt}, {@code nextRoundAt}) — jamais des durées d'animation du client.
  */
 @Saga
+@ProcessingGroup("game-flow-saga")
 public class GameFlowSaga {
 
     private static final Random RANDOM = new Random();

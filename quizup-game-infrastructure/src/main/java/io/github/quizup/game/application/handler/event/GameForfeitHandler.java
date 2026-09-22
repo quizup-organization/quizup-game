@@ -4,6 +4,7 @@ import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.port.out.GameRepositoryPort;
 import io.github.quizup.profile.domain.event.PresenceEvent;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * ne remonte que les duels {@code SYNC} opposant deux humains.
  */
 @Component
+@ProcessingGroup("game-forfeit-handler")
 public class GameForfeitHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GameForfeitHandler.class);

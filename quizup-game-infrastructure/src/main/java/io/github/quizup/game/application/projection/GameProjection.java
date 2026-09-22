@@ -8,6 +8,7 @@ import io.github.quizup.game.domain.model.GameRound;
 import io.github.quizup.game.domain.model.GameRoundStatus;
 import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.domain.port.out.GameRepositoryPort;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import java.util.List;
  * GameProjection — Persiste l'état des parties dans les tables de projection.
  */
 @Component
+@ProcessingGroup("game-projection")
 public class GameProjection {
 
     private static final Logger logger = LoggerFactory.getLogger(GameProjection.class);
