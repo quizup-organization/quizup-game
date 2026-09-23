@@ -1,3 +1,9 @@
+## [1.5.5](https://github.com/quizup-organization/quizup-game/compare/v1.5.4...v1.5.5) (2026-09-23)
+
+### Bug Fixes
+
+* **game:** keep cancel as POST action and bump SDK to 2.4.1 ([3120642](https://github.com/quizup-organization/quizup-game/commit/312064225e82aef3e94f59024b995b75884c16d5))
+
 ## [1.5.4](https://github.com/quizup-organization/quizup-game/compare/v1.5.3...v1.5.4) (2026-09-22)
 
 ### Bug Fixes
