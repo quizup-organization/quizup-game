@@ -138,7 +138,8 @@ public class GameController {
     }
 
     /**
-     * Annuler une partie (abandon d'un joueur).
+     * Annuler une partie — transition d'état sur l'agrégat, donc {@code POST /{id}/cancel}
+     * (la partie n'est pas supprimée, son statut passe à `CANCELED`).
      */
     @PostMapping("/{gameId}/cancel")
     public CompletableFuture<ResponseEntity<IdResponse>> cancelGame(@PathVariable String gameId) {

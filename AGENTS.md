@@ -31,8 +31,8 @@ spécial (`QuizUpConstants.SYSTEM_USER_ID`).
 | GET     | `/api/games/{gameId}/notifications` | `getGameNotificationsById(String)`              | `Collection<NotificationEnvelope<GameNotification>>` |
 | POST    | `/api/games/{gameId}/join`          | `joinGame(String, JoinGameRequest)`             | `IdResponse`                   |
 | POST    | `/api/games/{gameId}/answer`        | `answerQuestion(String, AnswerQuestionRequest)` | `IdResponse`                   |
-| POST    | `/api/games/{gameId}/cancel`        | `cancelGame(String)`                            | `IdResponse`                   |
 | POST    | `/api/games/{gameId}/abandon`       | `abandonGame(String)`                           | `IdResponse`                   |
+| POST    | `/api/games/{gameId}/cancel`        | `cancelGame(String)`                            | `IdResponse`                   |
 
 **Orchestration** : `GameFlowSaga` (remplace `BotGameSaga`) conduit toutes les parties SYNC — join
 auto des deux joueurs, start, rounds, réponse du bot, clôture, fin. Le service est **seule source
