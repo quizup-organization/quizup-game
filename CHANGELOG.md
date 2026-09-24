@@ -1,3 +1,9 @@
+## [1.5.8](https://github.com/quizup-organization/quizup-game/compare/v1.5.7...v1.5.8) (2026-09-24)
+
+### Bug Fixes
+
+* **deps:** bump quizup-parent to 2.4.4 (typed PageResult over query transport) ([942f750](https://github.com/quizup-organization/quizup-game/commit/942f750298a1d3661c692ee1a5b219f2ea54f6db))
+
 ## [1.5.7](https://github.com/quizup-organization/quizup-game/compare/v1.5.6...v1.5.7) (2026-09-24)
 
 ### Bug Fixes
