@@ -1,3 +1,9 @@
+## [1.5.6](https://github.com/quizup-organization/quizup-game/compare/v1.5.5...v1.5.6) (2026-09-24)
+
+### Bug Fixes
+
+* **deps:** bump quizup-parent to 2.4.2 (search criteria type info) ([5d2e08d](https://github.com/quizup-organization/quizup-game/commit/5d2e08d0f17fe4154bc8479b4e74572c1f651687))
+
 ## [1.5.5](https://github.com/quizup-organization/quizup-game/compare/v1.5.4...v1.5.5) (2026-09-23)
 
 ### Bug Fixes
