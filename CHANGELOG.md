@@ -1,3 +1,15 @@
+## [2.0.0](https://github.com/quizup-organization/quizup-game/compare/v1.5.8...v2.0.0) (2026-09-25)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** the service no longer exposes its REST API nor WebSocket
+(the BFF is the sole surface); search use cases now use the SDK SearchRequest/
+SearchResponse DTOs. Notifications are published by the BFF.
+
+### Features
+
+* **game:** headless service (REST + WS removed) + SDK search contracts ([c3db85a](https://github.com/quizup-organization/quizup-game/commit/c3db85aaaa5ab5f8ba13502d4580f7306dc49b3e))
+
 ## [1.5.8](https://github.com/quizup-organization/quizup-game/compare/v1.5.7...v1.5.8) (2026-09-24)
 
 ### Bug Fixes
