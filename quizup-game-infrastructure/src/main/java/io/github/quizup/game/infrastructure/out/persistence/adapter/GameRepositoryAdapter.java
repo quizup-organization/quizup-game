@@ -1,7 +1,7 @@
 package io.github.quizup.game.infrastructure.out.persistence.adapter;
 
-import io.github.quizup.microservice.core.domain.model.search.PageResult;
-import io.github.quizup.microservice.core.domain.model.search.SearchCriteria;
+import io.github.quizup.microservice.core.infrastructure.in.api.request.SearchRequest;
+import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.microservice.core.infrastructure.adapter.AnnotationSearchableEntity;
 import io.github.quizup.microservice.core.infrastructure.adapter.JpaSearchAdapter;
 import io.github.quizup.game.domain.model.Game;
@@ -56,8 +56,8 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<Game> findAll(SearchCriteria searchCriteria) {
-        return gameJpaSearchAdapter.findAll(searchCriteria)
+    public SearchResponse<Game> findAll(SearchRequest request) {
+        return gameJpaSearchAdapter.findAll(request)
                 .map(GameEntityMapper::toDomain);
     }
 }

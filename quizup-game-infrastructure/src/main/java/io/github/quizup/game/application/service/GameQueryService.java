@@ -2,7 +2,7 @@ package io.github.quizup.game.application.service;
 
 import io.github.quizup.microservice.core.infrastructure.axon.QueryResponseTypes;
 import io.github.quizup.microservice.core.domain.model.notification.NotificationEnvelope;
-import io.github.quizup.microservice.core.domain.model.search.PageResult;
+import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.Game;
@@ -39,7 +39,7 @@ public class GameQueryService implements GetGameUseCase, GetGameEventsUseCase, S
     }
 
     @Override
-    public CompletableFuture<PageResult<Game>> search(GameQuery.SearchGameQuery query) {
-        return queryGateway.query(query, QueryResponseTypes.pageResultOf(Game.class));
+    public CompletableFuture<SearchResponse<Game>> search(GameQuery.SearchGameQuery query) {
+        return queryGateway.query(query, QueryResponseTypes.searchResponseOf(Game.class));
     }
 }

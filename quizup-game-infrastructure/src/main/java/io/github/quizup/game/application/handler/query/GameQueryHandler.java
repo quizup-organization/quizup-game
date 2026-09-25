@@ -1,7 +1,7 @@
 package io.github.quizup.game.application.handler.query;
 
 import io.github.quizup.microservice.core.domain.model.notification.NotificationEnvelope;
-import io.github.quizup.microservice.core.domain.model.search.PageResult;
+import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.Game;
@@ -46,7 +46,7 @@ public class GameQueryHandler {
     }
 
     @QueryHandler
-    public PageResult<Game> handle(GameQuery.SearchGameQuery query) {
-        return gameRepositoryPort.findAll(query);
+    public SearchResponse<Game> handle(GameQuery.SearchGameQuery query) {
+        return gameRepositoryPort.findAll(query.request());
     }
 }
