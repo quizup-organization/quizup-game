@@ -8,13 +8,20 @@ import io.github.quizup.game.domain.model.Game;
 import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameStatus;
+import io.github.quizup.game.domain.model.PlayerGamesPage;
+import io.github.quizup.game.domain.model.TopicPopularity;
 import io.github.quizup.game.domain.port.out.GameRepositoryPort;
 import io.github.quizup.game.infrastructure.out.persistence.entity.GameEntity;
 import io.github.quizup.game.infrastructure.out.persistence.mapper.GameEntityMapper;
 import io.github.quizup.game.infrastructure.out.persistence.repository.GameJpaRepository;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -59,5 +66,27 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
     public SearchResponse<Game> findAll(SearchRequest request) {
         return gameJpaSearchAdapter.findAll(request)
                 .map(GameEntityMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PlayerGamesPage findPlayerGames(String playerId, String topicId, String opponentId, int page, int size) {
+        Page<GameEntity> result = gameJpaRepository.findPlayerGames(
+                playerId, topicId, opponentId, PageRequest.of(page, size));
+        return PlayerGamesPage.builder()
+                .games(result.getContent().stream().map(GameEntityMapper::toDomain).toList())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopicPopularity> findPopularTopics(Instant since, int limit) {
+        return gameJpaRepository.findPopularTopics(since, Limit.of(limit)).stream()
+                .map(row -> new TopicPopularity((String) row[0], ((Number) row[1]).longValue()))
+                .toList();
     }
 }

@@ -71,6 +71,15 @@ public class GameFlowSaga {
     @Setter
     private boolean singlePlayerRun;
 
+    /** La partie a démarré : l'expiration la clôture au lieu de l'annuler. */
+    @Getter
+    @Setter
+    private boolean started;
+
+    @Getter
+    @Setter
+    private String expiredDeadlineId;
+
     @Getter
     @Setter
     private String player1Id;
@@ -146,6 +155,10 @@ public class GameFlowSaga {
         this.player2Type = event.player2Type();
         this.botDifficulty = BotDifficulty.fromOrDefault(event.botDifficulty());
         this.joinedCount = 0;
+        this.expiredDeadlineId = deadlineManager.schedule(
+                GameDeadline.GAME_EXPIRED_TIMEOUT,
+                GameDeadline.GAME_EXPIRED
+        );
 
         if (GameMode.ASYNC.equals(event.mode())) {
             this.singlePlayerRun = isBlank(event.player2Id());
@@ -172,6 +185,7 @@ public class GameFlowSaga {
 
     @SagaEventHandler(associationProperty = "gameId")
     public void on(GameEvent.GameStartedEvent event) {
+        this.started = true;
         matchIntroDeadlineId = deadlineManager.schedule(
                 durationUntil(event.firstRoundAt()),
                 GameDeadline.MATCH_INTRO
@@ -181,6 +195,20 @@ public class GameFlowSaga {
     @DeadlineHandler(deadlineName = GameDeadline.MATCH_INTRO)
     public void onMatchIntro() {
         commandGateway.send(new GameCommand.StartRoundCommand(gameId));
+    }
+
+    /**
+     * Filet de sécurité : une partie ni terminée ni annulée sous {@code GAME_EXPIRED_TIMEOUT}
+     * est close d'office (forfait sans vainqueur en cours de jeu, annulation avant démarrage).
+     */
+    @DeadlineHandler(deadlineName = GameDeadline.GAME_EXPIRED)
+    public void onGameExpired() {
+        logger.warn("Partie expirée après {}h: gameId={}", GameRules.GAME_TIMEOUT_HOURS, gameId);
+        if (started) {
+            commandGateway.send(new GameCommand.EndGameCommand(gameId, null));
+            return;
+        }
+        commandGateway.send(new GameCommand.CancelGameCommand(gameId, "GAME_EXPIRED"));
     }
 
     @SagaEventHandler(associationProperty = "gameId")
@@ -351,6 +379,7 @@ public class GameFlowSaga {
         cancelQuestionRevealDeadline();
         cancelRoundDeadlines();
         cancelNextRoundDeadline();
+        cancelExpiredDeadline();
     }
 
     private void cancelMatchIntroDeadline() {
@@ -386,6 +415,13 @@ public class GameFlowSaga {
         if (nextRoundDeadlineId != null) {
             deadlineManager.cancelSchedule(GameDeadline.NEXT_ROUND_STARTS, nextRoundDeadlineId);
             nextRoundDeadlineId = null;
+        }
+    }
+
+    private void cancelExpiredDeadline() {
+        if (expiredDeadlineId != null) {
+            deadlineManager.cancelSchedule(GameDeadline.GAME_EXPIRED, expiredDeadlineId);
+            expiredDeadlineId = null;
         }
     }
 

@@ -1,9 +1,8 @@
-package io.github.quizup.game.infrastructure.out.question.adapter;
+package io.github.quizup.game.application.service;
 
 import io.github.quizup.microservice.core.infrastructure.axon.QueryResponseTypes;
 import io.github.quizup.game.domain.model.GameQuestion;
 import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
-import io.github.quizup.game.infrastructure.out.question.mapper.GameQuestionMapper;
 import io.github.quizup.theme.domain.model.Question;
 import io.github.quizup.theme.domain.query.QuestionQuery;
 import org.axonframework.queryhandling.QueryGateway;
@@ -11,12 +10,17 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Adaptateur sortant inter-module (spec §2.7) : résout les questions via quizup-theme et ne
+ * retourne que le type **local** {@link GameQuestion}. Interroge le bus Axon — la classe
+ * n'implémente aucun port entrant.
+ */
 @Service
-public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
+public class QuestionService implements QuestionRepositoryPort {
 
     private final QueryGateway queryGateway;
 
-    public QuestionRepositoryAdapter(QueryGateway queryGateway) {
+    public QuestionService(QueryGateway queryGateway) {
         this.queryGateway = queryGateway;
     }
 
@@ -32,4 +36,3 @@ public class QuestionRepositoryAdapter implements QuestionRepositoryPort {
                 .toList();
     }
 }
-

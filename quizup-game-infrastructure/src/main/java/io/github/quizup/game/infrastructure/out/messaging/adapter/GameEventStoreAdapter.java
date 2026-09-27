@@ -2,7 +2,7 @@ package io.github.quizup.game.infrastructure.out.messaging.adapter;
 
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.port.out.GameEventStorePort;
-import io.github.quizup.microservice.core.domain.model.notification.NotificationEnvelope;
+import io.github.quizup.microservice.core.domain.model.notification.EventEnvelope;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventsourcing.eventstore.DomainEventStream;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -34,14 +34,13 @@ public class GameEventStoreAdapter implements GameEventStorePort {
     }
 
     @Override
-    public List<NotificationEnvelope<GameEvent>> findEventEnvelopesByGameId(String gameId) {
-        List<NotificationEnvelope<GameEvent>> envelopes = new ArrayList<>();
+    public List<EventEnvelope> findEventEnvelopesByGameId(String gameId) {
+        List<EventEnvelope> envelopes = new ArrayList<>();
         DomainEventStream eventStream = eventStore.readEvents(gameId);
         while (eventStream.hasNext()) {
             DomainEventMessage<?> message = eventStream.next();
             if (message.getPayload() instanceof GameEvent gameEvent) {
-                envelopes.add(new NotificationEnvelope<>(
-                        message.getIdentifier(),
+                envelopes.add(EventEnvelope.of(
                         message.getAggregateIdentifier(),
                         message.getSequenceNumber(),
                         message.getTimestamp(),

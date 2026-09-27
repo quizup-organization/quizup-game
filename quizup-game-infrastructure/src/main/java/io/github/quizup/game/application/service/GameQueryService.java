@@ -1,9 +1,8 @@
 package io.github.quizup.game.application.service;
 
 import io.github.quizup.microservice.core.infrastructure.axon.QueryResponseTypes;
-import io.github.quizup.microservice.core.domain.model.notification.NotificationEnvelope;
+import io.github.quizup.microservice.core.domain.model.notification.EventEnvelope;
 import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
-import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.Game;
 import io.github.quizup.game.domain.port.in.GetGameEventsUseCase;
@@ -31,11 +30,10 @@ public class GameQueryService implements GetGameUseCase, GetGameEventsUseCase, S
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public CompletableFuture<List<NotificationEnvelope<GameEvent>>> getEvents(GameQuery.GetGameEventsQuery query) {
-        return queryGateway
-                .query(query, QueryResponseTypes.multipleInstancesOf(NotificationEnvelope.class))
-                .thenApply(result -> (List<NotificationEnvelope<GameEvent>>) (List<?>) result);
+    public CompletableFuture<List<EventEnvelope>> getEvents(GameQuery.GetGameEventsQuery query) {
+        return queryGateway.query(
+                query,
+                QueryResponseTypes.multipleInstancesOf(EventEnvelope.class));
     }
 
     @Override

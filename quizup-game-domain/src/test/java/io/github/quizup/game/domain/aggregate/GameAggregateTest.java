@@ -58,7 +58,7 @@ class GameAggregateTest {
     @Test
     void createGame_appliesGameCreatedEvent() {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt())).thenReturn(List.of());
+        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt())).thenReturn(questions());
 
         GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
                 GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, GamePlayerType.HUMAN, null, null);
@@ -70,6 +70,22 @@ class GameAggregateTest {
                 .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
                         GameEvent.GameCreatedEvent.class,
                         e -> ((GameEvent.GameCreatedEvent) e).gameId().equals(GAME_ID)));
+    }
+
+    @Test
+    void createGame_withFewerThanSevenQuestions_isRejected() {
+        QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
+        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt()))
+                .thenReturn(questions().subList(0, GameRules.TOTAL_ROUNDS - 1));
+
+        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, GamePlayerType.HUMAN, null, null);
+
+        fixture.registerInjectableResource(questionRepositoryPort)
+                .registerInjectableResource(mock(GameEventStorePort.class))
+                .givenNoPriorActivity()
+                .when(command)
+                .expectException(GameExceptions.NotEnoughQuestionsProblem.class);
     }
 
     @Test

@@ -74,6 +74,11 @@ public class GameAggregate {
 
         List<GameQuestion> questions = resolveQuestions(command, questionRepositoryPort, gameEventStorePort);
 
+        if (questions.size() < GameRules.TOTAL_ROUNDS) {
+            throw new GameExceptions.NotEnoughQuestionsProblem(
+                    command.gameId(), command.topicId(), questions.size());
+        }
+
         apply(
                 new GameEvent.GameCreatedEvent(
                         command.gameId(),

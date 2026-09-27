@@ -33,7 +33,17 @@ exposée par le service.
 - `AbandonGameUseCase` — abandon/forfait d'une partie en cours (`EndGameCommand(forfeitById)`)
 - `GetGameUseCase` — récupération par id
 - `GetGameEventsUseCase` — lecture des événements (event store)
-- `SearchGameUseCase` — recherche paginée (`POST /search` ; parties d'un joueur = filtre `player1Id`/`player2Id`)
+- `SearchGameUseCase` — recherche paginée (`POST /search`, réservée aux futures surfaces d'administration)
+
+**Queries dédiées aux vues BFF** (`GameQuery.java`) :
+
+- `GetPlayerGamesQuery(playerId, topicId, opponentId, page, size)` → `PlayerGamesPage` : historique
+  d'un joueur (filtres optionnels, plus récents d'abord), sans passer par le search.
+- `GetPopularTopicsQuery(since, limit)` → `List<TopicPopularity>` : thèmes les plus joués
+  (parties créées sur la fenêtre), group by `topic_id`.
+- `GetGameEventsQuery(gameId)` → `List<EventEnvelope>` (SDK) : event store exposé avec le payload
+  **typé** via `eventType` (codec du query bus distribué). Le mapping vers les notifications web
+  (`GameNotification`, annotations Jackson) est fait par le **BFF**, pas par ce service.
 
 ---
 
@@ -43,19 +53,24 @@ exposée par le service.
 |--------------------------|----------------|-------------------------------------------------|
 | `QuestionRepositoryPort` | `quizup-theme` | `QuestionQuery.GetRandomApprovedQuestionsQuery` |
 
-Implémentation : `infrastructure/out/question/adapter/QuestionRepositoryAdapter` (→ theme, mappé
-via `GameQuestionMapper.toGameQuestion`).
+Implémentation : `application/service/QuestionService` (port sortant inter-module, spec §2.7) —
+interroge `quizup-theme` via le bus et ne retourne que le type local `GameQuestion`
+(`GameQuestionMapper` dans la même couche).
 
 **Ports sortants locaux** : `GameRepositoryPort`, `GameEventStorePort`.
+
+### Règles de partie (lot C4)
+
+- **Création** : la partie exige `GameRules.TOTAL_ROUNDS` (7) questions approuvées ; sinon
+  `NotEnoughQuestionsProblem` (échec explicite, jamais de partie tronquée).
+- **Expiration** : `GameFlowSaga` planifie `GAME_EXPIRED` (24 h) à la création ; une partie jamais
+  terminée est annulée avant démarrage ou close avec forfait implicite après démarrage. La
+  deadline est annulée à `GameEndedEvent` / `GameRunRecordedEvent` / `GameCancelledEvent`.
+- **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
 
 ---
 
 ## 5. Contrats cassés / TODO
 
-- **Placement du port inter-service** : `QuestionRepositoryAdapter` (package
-  `infrastructure/out/question/adapter/`) implémente `QuestionRepositoryPort` (→ quizup-theme)
-  mais importe des types `io.github.quizup.theme.domain.*` (`Question`, `QuestionQuery`).
-  La spec §2.7 exige que l'implémentation d'un port sortant inter-modules soit dans
-  `application/service/` et ne retourne que des types **locaux** (`GameQuestion`). → **À corriger** :
-  déplacer vers `application/service/QuestionService`.
+Aucun connu à ce jour.
 

@@ -2,6 +2,7 @@ package io.github.quizup.game.domain.exception;
 
 import io.github.quizup.microservice.core.domain.exception.ProblemCategory;
 import io.github.quizup.game.domain.model.GamePlayer;
+import io.github.quizup.game.domain.model.GameRules;
 
 import java.util.Map;
 
@@ -48,6 +49,18 @@ public interface GameExceptions {
                     ProblemCategory.BUSINESS_INVALID_COMMAND,
                     "Timestamp required",
                     "A timestamp is required to answer a question in game " + gameId, null);
+        }
+    }
+
+    class NotEnoughQuestionsProblem extends GameProblem {
+        public NotEnoughQuestionsProblem(String gameId, String topicId, int available) {
+            super(gameId, "urn:quizup:game:notEnoughQuestions",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Not enough questions",
+                    "Topic " + topicId + " has " + available + " approved questions, "
+                            + GameRules.TOTAL_ROUNDS + " required to create game " + gameId,
+                    Map.of("topicId", topicId, "available", available,
+                            "required", GameRules.TOTAL_ROUNDS));
         }
     }
 

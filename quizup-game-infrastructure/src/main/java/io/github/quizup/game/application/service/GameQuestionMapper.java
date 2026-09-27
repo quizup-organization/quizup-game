@@ -1,4 +1,4 @@
-package io.github.quizup.game.infrastructure.out.question.mapper;
+package io.github.quizup.game.application.service;
 
 import io.github.quizup.game.domain.model.GameQuestion;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
@@ -10,9 +10,12 @@ import java.util.Map;
 
 import static java.util.Objects.isNull;
 
+/**
+ * Mapping question theme → modèle local du jeu (adaptateur sortant inter-module).
+ */
 public final class GameQuestionMapper {
+
     private GameQuestionMapper() {
-        // Private constructor to prevent instantiation
     }
 
     public static GameQuestion toGameQuestion(Question question) {
@@ -24,7 +27,6 @@ public final class GameQuestionMapper {
                 toGameQuestionChoices(question.answers()),
                 toGameQuestionChoice(question.correctAnswer())
         );
-
     }
 
     public static GameQuestionChoice toGameQuestionChoice(QuestionChoice questionChoice) {
@@ -46,7 +48,7 @@ public final class GameQuestionMapper {
             final GameQuestionChoice gameQuestionChoice = toGameQuestionChoice(entry.getKey());
 
             if (isNull(gameQuestionChoice)) {
-                continue; // Skip null keys
+                continue;
             }
 
             gameQuestionChoices.put(gameQuestionChoice, entry.getValue());
