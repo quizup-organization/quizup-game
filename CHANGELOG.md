@@ -1,3 +1,9 @@
+## [2.1.0](https://github.com/quizup-organization/quizup-game/compare/v2.0.0...v2.1.0) (2026-09-27)
+
+### Features
+
+* **game:** player games, popular topics and run info queries; harden creation and expiry ([8c7a269](https://github.com/quizup-organization/quizup-game/commit/8c7a269c98a13a00bf98ee188a94fae0b6679543))
+
 ## [2.0.0](https://github.com/quizup-organization/quizup-game/compare/v1.5.8...v2.0.0) (2026-09-25)
 
 ### ⚠ BREAKING CHANGES
