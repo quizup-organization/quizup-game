@@ -1,3 +1,13 @@
+## [3.0.0](https://github.com/quizup-organization/quizup-game/compare/v2.1.0...v3.0.0) (2026-09-30)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** GameQuestion carries sourceLanguage + translations (record shape changed); game-domain consumers must adapt.
+
+### Features
+
+* **game:** multilingual question snapshot with translations ([a01f26a](https://github.com/quizup-organization/quizup-game/commit/a01f26a3ac34683ff89d3953f314b7adfc1b8e46))
+
 ## [2.1.0](https://github.com/quizup-organization/quizup-game/compare/v2.0.0...v2.1.0) (2026-09-27)
 
 ### Features
