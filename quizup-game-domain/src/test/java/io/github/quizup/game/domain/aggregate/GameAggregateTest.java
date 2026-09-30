@@ -8,10 +8,12 @@ import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestion;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
+import io.github.quizup.game.domain.model.GameQuestionContent;
 import io.github.quizup.game.domain.model.GameRoundType;
 import io.github.quizup.game.domain.model.GameRules;
 import io.github.quizup.game.domain.port.out.GameEventStorePort;
 import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
+import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -271,14 +273,16 @@ class GameAggregateTest {
         return IntStream.range(0, GameRules.TOTAL_ROUNDS)
                 .mapToObj(i -> new GameQuestion(
                         "question-" + i,
-                        "Question " + i,
+                        Language.FR,
+                        Map.of(Language.FR, new GameQuestionContent(
+                                "Question " + i,
+                                Map.of(
+                                        GameQuestionChoice.A, "Réponse A",
+                                        GameQuestionChoice.B, "Réponse B",
+                                        GameQuestionChoice.C, "Réponse C",
+                                        GameQuestionChoice.D, "Réponse D"))),
                         null,
                         null,
-                        Map.of(
-                                GameQuestionChoice.A, "Réponse A",
-                                GameQuestionChoice.B, "Réponse B",
-                                GameQuestionChoice.C, "Réponse C",
-                                GameQuestionChoice.D, "Réponse D"),
                         GameQuestionChoice.A))
                 .toList();
     }
