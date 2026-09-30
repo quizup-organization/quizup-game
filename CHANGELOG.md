@@ -1,3 +1,13 @@
+## [4.0.0](https://github.com/quizup-organization/quizup-game/compare/v3.0.0...v4.0.0) (2026-09-30)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** CreateGameCommand carries required languages; QuestionRepositoryPort and GetRandomApprovedQuestionsQuery filter strictly; GameQuestion holds a Map<Language, GameQuestionContent> without sourceLanguage.
+
+### Code Refactoring
+
+* **game:** strict per-language question selection and contents map ([0202752](https://github.com/quizup-organization/quizup-game/commit/0202752fe9ef1266422aec1846fa8b9e7cc35900))
+
 ## [3.0.0](https://github.com/quizup-organization/quizup-game/compare/v2.1.0...v3.0.0) (2026-09-30)
 
 ### ⚠ BREAKING CHANGES
