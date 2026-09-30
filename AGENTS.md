@@ -55,9 +55,11 @@ exposée par le service.
 
 Implémentation : `application/service/QuestionService` (port sortant inter-module, spec §2.7) —
 interroge `quizup-theme` via le bus et ne retourne que le type local `GameQuestion`
-(`GameQuestionMapper` dans la même couche). Le snapshot `GameQuestion` embarque **toutes les
-traductions** (`sourceLanguage` + `translations`) : chaque client choisit sa langue, avec repli sur
-la langue source (les parties créées avant l'i18n n'ont qu'un contenu).
+(`GameQuestionMapper` dans la même couche). `CreateGameCommand` porte les **langues requises**
+(union des langues des joueurs, résolues côté serveur) : la sélection est **stricte** (questions
+disponibles dans toutes ces langues) et la partie échoue en `NotEnoughQuestionsProblem` sinon. Le
+snapshot `GameQuestion` embarque **tous les contenus localisés** (`translations`) : chaque client
+choisit sa langue, avec repli déterministe FR → EN → premier contenu.
 
 **Ports sortants locaux** : `GameRepositoryPort`, `GameEventStorePort`.
 

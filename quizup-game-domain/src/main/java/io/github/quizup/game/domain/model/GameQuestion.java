@@ -3,34 +3,50 @@ package io.github.quizup.game.domain.model;
 import io.github.quizup.microservice.core.domain.model.i18n.Language;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Snapshot immuable multilingue d'une question, embarqué dans les events pour autonomie
- * event-sourcing. {@link #translations()} contient la langue source et ses traductions ;
- * le client choisit la sienne, avec repli sur la langue source.
+ * event-sourcing. Le repli de lecture est déterministe : langue demandée, puis français,
+ * puis anglais, puis premier contenu disponible.
  */
 public record GameQuestion(
         String questionId,
-        Language sourceLanguage,
         Map<Language, GameQuestionContent> translations,
         String imageUrl,
         String difficulty,
         GameQuestionChoice correctAnswer
 ) {
 
-    /** Contenu dans la langue demandée, avec repli sur la langue source. */
+    /** Langues disponibles pour cette question. */
+    public Set<Language> availableLanguages() {
+        return Set.copyOf(translations.keySet());
+    }
+
+    /** Contenu dans la langue demandée, avec repli déterministe (FR, puis EN, puis premier). */
     public GameQuestionContent content(Language language) {
         GameQuestionContent content = translations.get(language);
-        return content != null ? content : translations.get(sourceLanguage);
+        if (content != null) {
+            return content;
+        }
+        content = translations.get(Language.FR);
+        if (content != null) {
+            return content;
+        }
+        content = translations.get(Language.EN);
+        if (content != null) {
+            return content;
+        }
+        return translations.values().iterator().next();
     }
 
-    /** Texte source (compatibilité lecture). */
+    /** Texte de repli (FR prioritaire), utilisé par le contrat BFF. */
     public String text() {
-        return content(sourceLanguage).text();
+        return content(Language.FR).text();
     }
 
-    /** Réponses source (compatibilité lecture). */
+    /** Réponses de repli (FR prioritaire), utilisées par le contrat BFF. */
     public Map<GameQuestionChoice, String> answers() {
-        return content(sourceLanguage).answers();
+        return content(Language.FR).answers();
     }
 }

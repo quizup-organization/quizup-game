@@ -4,9 +4,11 @@ import io.github.quizup.game.domain.model.BotDifficulty;
 import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
+import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.time.Instant;
+import java.util.Set;
 
 public interface GameCommand {
     String gameId();
@@ -17,6 +19,8 @@ public interface GameCommand {
      * player2Id = "BOT" si player2Type=BOT.
      * ghostGameId référence un run asynchrone enregistré dont les questions sont réutilisées
      * (mode replay) ; null pour un tirage aléatoire ou un run enregistré.
+     * {@code languages} = langues requises (union des langues des joueurs) : seules les questions
+     * disponibles dans **toutes** ces langues sont tirées (sélection stricte).
      */
     record CreateGameCommand(
             @TargetAggregateIdentifier String gameId,
@@ -26,6 +30,7 @@ public interface GameCommand {
             String player2Id,
             String player2Name,
             GameMode mode,
+            Set<Language> languages,
             GamePlayerType player2Type,
             BotDifficulty botDifficulty,
             String ghostGameId

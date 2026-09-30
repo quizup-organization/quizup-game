@@ -3,8 +3,11 @@ package io.github.quizup.game.domain.exception;
 import io.github.quizup.microservice.core.domain.exception.ProblemCategory;
 import io.github.quizup.game.domain.model.GamePlayer;
 import io.github.quizup.game.domain.model.GameRules;
+import io.github.quizup.microservice.core.domain.model.i18n.Language;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Exceptions spécifiques au domaine Game.
@@ -53,14 +56,15 @@ public interface GameExceptions {
     }
 
     class NotEnoughQuestionsProblem extends GameProblem {
-        public NotEnoughQuestionsProblem(String gameId, String topicId, int available) {
+        public NotEnoughQuestionsProblem(String gameId, String topicId, int available, Set<Language> languages) {
             super(gameId, "urn:quizup:game:notEnoughQuestions",
                     ProblemCategory.BUSINESS_INVALID_COMMAND,
                     "Not enough questions",
-                    "Topic " + topicId + " has " + available + " approved questions, "
-                            + GameRules.TOTAL_ROUNDS + " required to create game " + gameId,
+                    "Topic " + topicId + " has " + available + " approved questions in "
+                            + languages + ", " + GameRules.TOTAL_ROUNDS + " required to create game " + gameId,
                     Map.of("topicId", topicId, "available", available,
-                            "required", GameRules.TOTAL_ROUNDS));
+                            "required", GameRules.TOTAL_ROUNDS,
+                            "languages", languages.stream().map(Language::code).toList()));
         }
     }
 

@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -60,10 +62,10 @@ class GameAggregateTest {
     @Test
     void createGame_appliesGameCreatedEvent() {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt())).thenReturn(questions());
+        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
 
         GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, GamePlayerType.HUMAN, null, null);
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
 
         fixture.registerInjectableResource(questionRepositoryPort)
                 .registerInjectableResource(mock(GameEventStorePort.class))
@@ -77,11 +79,11 @@ class GameAggregateTest {
     @Test
     void createGame_withFewerThanSevenQuestions_isRejected() {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt()))
+        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet()))
                 .thenReturn(questions().subList(0, GameRules.TOTAL_ROUNDS - 1));
 
         GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, GamePlayerType.HUMAN, null, null);
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
 
         fixture.registerInjectableResource(questionRepositoryPort)
                 .registerInjectableResource(mock(GameEventStorePort.class))
@@ -121,11 +123,11 @@ class GameAggregateTest {
     @Test
     void createAsyncRecordGame_allowsAbsentPlayer2() {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt())).thenReturn(questions());
+        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
 
         GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
                 GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", null, null,
-                GameMode.ASYNC, GamePlayerType.HUMAN, null, null);
+                GameMode.ASYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
 
         fixture.registerInjectableResource(questionRepositoryPort)
                 .registerInjectableResource(mock(GameEventStorePort.class))
@@ -273,14 +275,21 @@ class GameAggregateTest {
         return IntStream.range(0, GameRules.TOTAL_ROUNDS)
                 .mapToObj(i -> new GameQuestion(
                         "question-" + i,
-                        Language.FR,
-                        Map.of(Language.FR, new GameQuestionContent(
-                                "Question " + i,
-                                Map.of(
-                                        GameQuestionChoice.A, "Réponse A",
-                                        GameQuestionChoice.B, "Réponse B",
-                                        GameQuestionChoice.C, "Réponse C",
-                                        GameQuestionChoice.D, "Réponse D"))),
+                        Map.of(
+                                Language.FR, new GameQuestionContent(
+                                        "Question " + i,
+                                        Map.of(
+                                                GameQuestionChoice.A, "Réponse A",
+                                                GameQuestionChoice.B, "Réponse B",
+                                                GameQuestionChoice.C, "Réponse C",
+                                                GameQuestionChoice.D, "Réponse D")),
+                                Language.EN, new GameQuestionContent(
+                                        "Question " + i,
+                                        Map.of(
+                                                GameQuestionChoice.A, "Answer A",
+                                                GameQuestionChoice.B, "Answer B",
+                                                GameQuestionChoice.C, "Answer C",
+                                                GameQuestionChoice.D, "Answer D"))),
                         null,
                         null,
                         GameQuestionChoice.A))

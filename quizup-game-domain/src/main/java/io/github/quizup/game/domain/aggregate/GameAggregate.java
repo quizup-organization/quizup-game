@@ -76,7 +76,7 @@ public class GameAggregate {
 
         if (questions.size() < GameRules.TOTAL_ROUNDS) {
             throw new GameExceptions.NotEnoughQuestionsProblem(
-                    command.gameId(), command.topicId(), questions.size());
+                    command.gameId(), command.topicId(), questions.size(), command.languages());
         }
 
         apply(
@@ -116,7 +116,8 @@ public class GameAggregate {
         }
         return questionRepositoryPort.findRandomApprovedByTopicId(
                 command.topicId(),
-                GameRules.TOTAL_ROUNDS
+                GameRules.TOTAL_ROUNDS,
+                command.languages()
         );
     }
 
