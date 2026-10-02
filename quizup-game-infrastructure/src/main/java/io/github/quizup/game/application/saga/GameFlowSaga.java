@@ -3,7 +3,6 @@ package io.github.quizup.game.application.saga;
 import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.game.domain.port.out.GameEventStorePort;
 import lombok.Getter;
 import lombok.Setter;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -23,20 +22,15 @@ import java.time.Instant;
 import java.util.Random;
 
 /**
- * Orchestration d'une partie, dans les trois saveurs du jeu :
+ * Orchestration du cycle de vie d'une partie :
  * <ul>
- *   <li><b>SYNC</b> : les deux joueurs rejoignent, la partie démarre à leur présence.</li>
- *   <li><b>ASYNC record</b> (joueur 2 absent) : run solo, le round se clôt dès la réponse du
- *       joueur (ou expiration) et la partie se termine par un {@code GameRunRecordedEvent} —
- *       sans vainqueur ni XP.</li>
- *   <li><b>ASYNC replay</b> (joueur 2 {@code GHOST}) : le fantôme rejoue les réponses d'un run
- *       enregistré, planifiées à leurs timings ; la partie se termine par le {@code GameEndedEvent}
- *       autoritaire (XP pour les deux joueurs).</li>
+ *   <li>la partie est créée par le lobby (les deux joueurs y étaient présents) ;</li>
+ *   <li>elle ne démarre qu'une fois les deux joueurs entrés dans l'arène
+ *       ({@code GameJoinedEvent}) — le bot est rejoint côté serveur ;</li>
+ *   <li>les deadlines de phase sont dérivées des instants absolus portés par les événements.</li>
  * </ul>
  *
- * <p>Le serveur est seule source de vérité du temps : les deadlines de phase sont dérivées des
- * instants absolus portés par les événements ({@code firstRoundAt}, {@code revealAt},
- * {@code answerDeadlineAt}, {@code nextRoundAt}) — jamais des durées d'animation du client.
+ * <p>Le serveur est seule source de vérité du temps.
  */
 @Saga
 @ProcessingGroup("game-flow-saga")
@@ -51,25 +45,9 @@ public class GameFlowSaga {
     @Autowired
     private transient DeadlineManager deadlineManager;
 
-    @Autowired
-    private transient GameEventStorePort gameEventStorePort;
-
     @Getter
     @Setter
     private String gameId;
-
-    @Getter
-    @Setter
-    private GameMode mode;
-
-    @Getter
-    @Setter
-    private String ghostGameId;
-
-    /** Run asynchrone solo : un seul joueur présent, pas de fantôme. */
-    @Getter
-    @Setter
-    private boolean singlePlayerRun;
 
     /** La partie a démarré : l'expiration la clôture au lieu de l'annuler. */
     @Getter
@@ -140,16 +118,10 @@ public class GameFlowSaga {
     @Setter
     private String botDeadlineId;
 
-    @Getter
-    @Setter
-    private String ghostDeadlineId;
-
     @StartSaga
     @SagaEventHandler(associationProperty = "gameId")
     public void on(GameEvent.GameCreatedEvent event) {
         this.gameId = event.gameId();
-        this.mode = event.mode();
-        this.ghostGameId = event.ghostGameId();
         this.player1Id = event.player1Id();
         this.player2Id = event.player2Id();
         this.player2Type = event.player2Type();
@@ -160,25 +132,17 @@ public class GameFlowSaga {
                 GameDeadline.GAME_EXPIRED
         );
 
-        if (GameMode.ASYNC.equals(event.mode())) {
-            this.singlePlayerRun = isBlank(event.player2Id());
-            commandGateway.send(new GameCommand.JoinGameCommand(gameId, player1Id));
-            if (!singlePlayerRun) {
-                commandGateway.send(new GameCommand.JoinGameCommand(gameId, player2Id));
-            }
-            commandGateway.send(new GameCommand.StartGameCommand(gameId));
-            return;
+        // Seul le bot est rejoint côté serveur : il n'a pas de client pour entrer dans l'arène.
+        if (GamePlayerType.BOT.equals(player2Type)) {
+            commandGateway.send(new GameCommand.JoinGameCommand(gameId, player2Id));
         }
-
-        commandGateway.send(new GameCommand.JoinGameCommand(gameId, player1Id));
-        commandGateway.send(new GameCommand.JoinGameCommand(gameId, player2Id));
     }
 
     @SagaEventHandler(associationProperty = "gameId")
     public void on(GameEvent.GameJoinedEvent event) {
         joinedCount++;
 
-        if (GameMode.SYNC.equals(mode) && joinedCount == 2) {
+        if (joinedCount == 2) {
             commandGateway.send(new GameCommand.StartGameCommand(gameId));
         }
     }
@@ -199,13 +163,13 @@ public class GameFlowSaga {
 
     /**
      * Filet de sécurité : une partie ni terminée ni annulée sous {@code GAME_EXPIRED_TIMEOUT}
-     * est close d'office (forfait sans vainqueur en cours de jeu, annulation avant démarrage).
+     * est close d'office (annulation avant démarrage, clôture au score en cours de jeu).
      */
     @DeadlineHandler(deadlineName = GameDeadline.GAME_EXPIRED)
     public void onGameExpired() {
         logger.warn("Partie expirée après {}h: gameId={}", GameRules.GAME_TIMEOUT_HOURS, gameId);
         if (started) {
-            commandGateway.send(new GameCommand.EndGameCommand(gameId, null));
+            commandGateway.send(new GameCommand.EndGameCommand(gameId));
             return;
         }
         commandGateway.send(new GameCommand.CancelGameCommand(gameId, "GAME_EXPIRED"));
@@ -243,8 +207,6 @@ public class GameFlowSaga {
                     randomBotAnswerDelay(),
                     GameDeadline.BOT_ANSWERS
             );
-        } else if (GamePlayerType.GHOST.equals(player2Type)) {
-            scheduleGhostAnswer(event.round());
         }
     }
 
@@ -255,28 +217,7 @@ public class GameFlowSaga {
                 : randomWrongAnswer(currentCorrectAnswer);
 
         commandGateway.send(
-                new GameCommand.AnswerQuestionCommand(
-                        gameId,
-                        player2Id,
-                        botChoice,
-                        Instant.now()
-                )
-        );
-    }
-
-    @DeadlineHandler(deadlineName = GameDeadline.GHOST_ANSWERS)
-    public void onGhostAnswers() {
-        GhostAnswer answer = findGhostAnswer(currentRound);
-        if (answer == null || answer.choice() == null) {
-            return;
-        }
-        commandGateway.send(
-                new GameCommand.AnswerQuestionCommand(
-                        gameId,
-                        player2Id,
-                        answer.choice(),
-                        Instant.now()
-                )
+                new GameCommand.AnswerQuestionCommand(gameId, player2Id, botChoice, Instant.now())
         );
     }
 
@@ -289,8 +230,7 @@ public class GameFlowSaga {
             player2Answered = true;
         }
 
-        boolean roundComplete = singlePlayerRun ? player1Answered : answersInCurrentRound >= 2;
-        if (roundComplete) {
+        if (answersInCurrentRound >= 2) {
             cancelRoundDeadlines();
             commandGateway.send(new GameCommand.CloseRoundCommand(gameId));
         }
@@ -299,12 +239,10 @@ public class GameFlowSaga {
     @DeadlineHandler(deadlineName = GameDeadline.ROUND_EXPIRED)
     public void onRoundExpired() {
         if (!player1Answered) {
-            commandGateway.send(new GameCommand.AnswerQuestionCommand(
-                    gameId, player1Id, null, Instant.now()));
+            commandGateway.send(new GameCommand.AnswerQuestionCommand(gameId, player1Id, null, Instant.now()));
         }
-        if (!singlePlayerRun && !player2Answered) {
-            commandGateway.send(new GameCommand.AnswerQuestionCommand(
-                    gameId, player2Id, null, Instant.now()));
+        if (!player2Answered) {
+            commandGateway.send(new GameCommand.AnswerQuestionCommand(gameId, player2Id, null, Instant.now()));
         }
     }
 
@@ -317,10 +255,8 @@ public class GameFlowSaga {
                     durationUntil(event.nextRoundAt()),
                     GameDeadline.NEXT_ROUND_STARTS
             );
-        } else if (singlePlayerRun) {
-            commandGateway.send(new GameCommand.EndRunCommand(gameId));
         } else {
-            commandGateway.send(new GameCommand.EndGameCommand(gameId, null));
+            commandGateway.send(new GameCommand.EndGameCommand(gameId));
         }
     }
 
@@ -338,40 +274,8 @@ public class GameFlowSaga {
 
     @EndSaga
     @SagaEventHandler(associationProperty = "gameId")
-    public void on(GameEvent.GameRunRecordedEvent event) {
-        logger.info("Async run recorded: gameId={}, playerId={}", gameId, event.playerId());
-        cancelAll();
-    }
-
-    @EndSaga
-    @SagaEventHandler(associationProperty = "gameId")
     public void on(GameEvent.GameCancelledEvent event) {
         cancelAll();
-    }
-
-    /** Rejoue la réponse enregistrée du fantôme pour le round donné, à son timing d'origine. */
-    private void scheduleGhostAnswer(GameRoundType round) {
-        GhostAnswer answer = findGhostAnswer(round);
-        if (answer == null || answer.choice() == null) {
-            return;
-        }
-        ghostDeadlineId = deadlineManager.schedule(
-                Duration.ofMillis(Math.max(0, answer.timeMs())),
-                GameDeadline.GHOST_ANSWERS
-        );
-    }
-
-    private GhostAnswer findGhostAnswer(GameRoundType round) {
-        if (isBlank(ghostGameId)) {
-            return null;
-        }
-        return gameEventStorePort.findEventsByGameId(ghostGameId).stream()
-                .filter(GameEvent.QuestionAnsweredEvent.class::isInstance)
-                .map(GameEvent.QuestionAnsweredEvent.class::cast)
-                .filter(answered -> answered.round() == round)
-                .findFirst()
-                .map(answered -> new GhostAnswer(answered.choice(), answered.timeMs()))
-                .orElse(null);
     }
 
     private void cancelAll() {
@@ -404,10 +308,6 @@ public class GameFlowSaga {
         if (botDeadlineId != null) {
             deadlineManager.cancelSchedule(GameDeadline.BOT_ANSWERS, botDeadlineId);
             botDeadlineId = null;
-        }
-        if (ghostDeadlineId != null) {
-            deadlineManager.cancelSchedule(GameDeadline.GHOST_ANSWERS, ghostDeadlineId);
-            ghostDeadlineId = null;
         }
     }
 
@@ -444,13 +344,5 @@ public class GameFlowSaga {
             wrong = all[RANDOM.nextInt(all.length)];
         } while (wrong == correct);
         return wrong;
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    /** Réponse enregistrée d'un run asynchrone (choix + temps depuis la révélation). */
-    private record GhostAnswer(GameQuestionChoice choice, long timeMs) {
     }
 }

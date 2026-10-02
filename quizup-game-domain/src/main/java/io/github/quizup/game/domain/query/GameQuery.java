@@ -15,12 +15,6 @@ public interface GameQuery {
     }
 
     /**
-     * Informations minimales d'une partie (validation d'un run asynchrone par un autre service).
-     */
-    record GetGameRunInfoQuery(String gameId) implements GameQuery {
-    }
-
-    /**
      * Historique paginé des parties d'un joueur.
      * {@code topicId} et {@code opponentId} sont optionnels ({@code null} = pas de filtre).
      */

@@ -4,14 +4,13 @@ import io.github.quizup.axon.test.QuizUpAxonMatchers;
 import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
-import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestion;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.game.domain.model.GameQuestionContent;
 import io.github.quizup.game.domain.model.GameRoundType;
 import io.github.quizup.game.domain.model.GameRules;
-import io.github.quizup.game.domain.port.out.GameEventStorePort;
+import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.test.aggregate.AggregateTestFixture;
@@ -35,10 +34,6 @@ import static org.mockito.Mockito.when;
  *
  * <p>100 % in-memory : event store de l'agrégat en mémoire, aucun Postgres ni Axon Server.
  * Le port sortant {@link QuestionRepositoryPort} est un mock.
- *
- * <p>Couvre le cycle de round à deux phases : la question est affichée sans chrono, puis les
- * réponses sont révélées et le chrono démarre — répondre avant la révélation est refusé, et le
- * temps de réponse est mesuré depuis la révélation.
  */
 class GameAggregateTest {
 
@@ -52,10 +47,6 @@ class GameAggregateTest {
 
     @BeforeEach
     void setUp() {
-        // GameAggregate reconstruit `players` à partir des arguments de l'événement dans son
-        // handler `on(GameCreatedEvent)` ; le snapshot in-mémoire peut donc différer de l'état
-        // final et le fixture lève une "Illegal state change". On désactive la détection
-        // (comportement documenté par Axon) — les assertions sur les événements restent la preuve.
         fixture.setReportIllegalStateChange(false);
     }
 
@@ -64,13 +55,9 @@ class GameAggregateTest {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
         when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
 
-        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
-
         fixture.registerInjectableResource(questionRepositoryPort)
-                .registerInjectableResource(mock(GameEventStorePort.class))
                 .givenNoPriorActivity()
-                .when(command)
+                .when(createCommand())
                 .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
                         GameEvent.GameCreatedEvent.class,
                         e -> ((GameEvent.GameCreatedEvent) e).gameId().equals(GAME_ID)));
@@ -82,14 +69,45 @@ class GameAggregateTest {
         when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet()))
                 .thenReturn(questions().subList(0, GameRules.TOTAL_ROUNDS - 1));
 
-        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo", GameMode.SYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
-
         fixture.registerInjectableResource(questionRepositoryPort)
-                .registerInjectableResource(mock(GameEventStorePort.class))
+                .givenNoPriorActivity()
+                .when(createCommand())
+                .expectException(GameExceptions.NotEnoughQuestionsProblem.class);
+    }
+
+    @Test
+    void createGame_withBlankPlayer2_isRejected() {
+        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", " ", "Bravo",
+                Set.of(Language.FR), GamePlayerType.HUMAN, null);
+
+        fixture.registerInjectableResource(mock(QuestionRepositoryPort.class))
                 .givenNoPriorActivity()
                 .when(command)
-                .expectException(GameExceptions.NotEnoughQuestionsProblem.class);
+                .expectException(GameExceptions.MissingPlayerProblem.class);
+    }
+
+    @Test
+    void joinGame_isIdempotent() {
+        fixture.given(concat(created(), joined(PLAYER_1), joined(PLAYER_2)))
+                .when(new GameCommand.JoinGameCommand(GAME_ID, PLAYER_1))
+                .expectNoEvents();
+    }
+
+    @Test
+    void leaveBeforeStart_cancelsGame() {
+        fixture.given(concat(created(), joined(PLAYER_1)))
+                .when(new GameCommand.LeaveGameCommand(GAME_ID, PLAYER_1))
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
+                        GameEvent.GameCancelledEvent.class,
+                        e -> "PLAYER_LEFT".equals(((GameEvent.GameCancelledEvent) e).reason())));
+    }
+
+    @Test
+    void leaveAfterStart_isRejected() {
+        fixture.given(readyGame())
+                .when(new GameCommand.LeaveGameCommand(GAME_ID, PLAYER_1))
+                .expectException(GameExceptions.GameAlreadyStartedProblem.class);
     }
 
     @Test
@@ -121,76 +139,28 @@ class GameAggregateTest {
     }
 
     @Test
-    void createAsyncRecordGame_allowsAbsentPlayer2() {
-        QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
-
-        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", null, null,
-                GameMode.ASYNC, Set.of(Language.FR), GamePlayerType.HUMAN, null, null);
-
-        fixture.registerInjectableResource(questionRepositoryPort)
-                .registerInjectableResource(mock(GameEventStorePort.class))
-                .givenNoPriorActivity()
-                .when(command)
-                .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
-                        GameEvent.GameCreatedEvent.class,
-                        e -> ((GameEvent.GameCreatedEvent) e).mode() == GameMode.ASYNC));
-    }
-
-    @Test
-    void endRun_recordsRunWithoutWinner() {
-        Instant answeredAt = Instant.now();
-
-        fixture.given(concat(asyncReadyGame(), answered(answeredAt)))
-                .when(new GameCommand.EndRunCommand(GAME_ID))
-                .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
-                        GameEvent.GameRunRecordedEvent.class,
-                        e -> {
-                            GameEvent.GameRunRecordedEvent recorded = (GameEvent.GameRunRecordedEvent) e;
-                            return PLAYER_1.equals(recorded.playerId()) && recorded.score() == 18;
-                        }));
-    }
-
-    @Test
     void forfeitEndsGame_andOpponentWins() {
         fixture.given(readyGame())
-                .when(new GameCommand.EndGameCommand(GAME_ID, PLAYER_2))
+                .when(new GameCommand.ForfeitGameCommand(GAME_ID, PLAYER_2))
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameEndedEvent.class,
                         e -> {
                             GameEvent.GameEndedEvent ended = (GameEvent.GameEndedEvent) e;
-                            return PLAYER_1.equals(ended.winnerId())
-                                    && PLAYER_2.equals(ended.forfeitById());
-                        }));
-    }
-
-    @Test
-    void abandonAsyncSolo_endsGameWithoutWinner() {
-        fixture.given(asyncReadyGame())
-                .when(new GameCommand.EndGameCommand(GAME_ID, PLAYER_1))
-                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
-                        GameEvent.GameEndedEvent.class,
-                        e -> {
-                            GameEvent.GameEndedEvent ended = (GameEvent.GameEndedEvent) e;
-                            return ended.winnerId() == null
-                                    && ended.player2Id() == null
-                                    && PLAYER_1.equals(ended.forfeitById());
+                            return PLAYER_1.equals(ended.winnerId());
                         }));
     }
 
     @Test
     void forfeitByNonPlayer_isRejected() {
         fixture.given(readyGame())
-                .when(new GameCommand.EndGameCommand(GAME_ID, "stranger"))
+                .when(new GameCommand.ForfeitGameCommand(GAME_ID, "stranger"))
                 .expectException(GameExceptions.PlayerNotInGameProblem.class);
     }
 
     @Test
-    void abandon_whenNotInProgress_isRejected() {
-        fixture.given(concat(asyncReadyGame(),
-                        new GameEvent.GameRunRecordedEvent(GAME_ID, PLAYER_1, TOPIC_ID, 0, Instant.now())))
-                .when(new GameCommand.EndGameCommand(GAME_ID, PLAYER_1))
+    void forfeit_whenNotInProgress_isRejected() {
+        fixture.given(created())
+                .when(new GameCommand.ForfeitGameCommand(GAME_ID, PLAYER_1))
                 .expectException(GameExceptions.GameNotInProgressProblem.class);
     }
 
@@ -207,7 +177,6 @@ class GameAggregateTest {
                         GameEvent.QuestionAnsweredEvent.class,
                         e -> {
                             GameEvent.QuestionAnsweredEvent answered = (GameEvent.QuestionAnsweredEvent) e;
-                            // 2 s après la révélation : 10 (base) + 8 (bonus de vitesse) = 18.
                             return answered.correct()
                                     && answered.pointsEarned() == 18
                                     && answered.timeMs() == 2000;
@@ -223,33 +192,25 @@ class GameAggregateTest {
         return result;
     }
 
+    private GameCommand.CreateGameCommand createCommand() {
+        return new GameCommand.CreateGameCommand(
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
+                Set.of(Language.FR), GamePlayerType.HUMAN, null);
+    }
+
+    private Object[] created() {
+        return new Object[]{new GameEvent.GameCreatedEvent(
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
+                GamePlayerType.HUMAN, questions(), null, Instant.now())};
+    }
+
+    private GameEvent.GameJoinedEvent joined(String playerId) {
+        return new GameEvent.GameJoinedEvent(GAME_ID, playerId, Instant.now());
+    }
+
     private Object[] readyGame() {
-        return new Object[]{
-                new GameEvent.GameCreatedEvent(
-                        GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
-                        GamePlayerType.HUMAN, GameMode.SYNC, questions(), null, null, Instant.now()),
-                new GameEvent.GameJoinedEvent(GAME_ID, PLAYER_1, Instant.now()),
-                new GameEvent.GameJoinedEvent(GAME_ID, PLAYER_2, Instant.now()),
-                new GameEvent.GameStartedEvent(
-                        GAME_ID, GameMode.SYNC, Instant.now(), Instant.now().plusMillis(GameRules.MATCH_INTRO_MS))
-        };
-    }
-
-    /** Run asynchrone solo : pas de joueur 2, partie démarrée. */
-    private Object[] asyncReadyGame() {
-        return new Object[]{
-                new GameEvent.GameCreatedEvent(
-                        GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", null, null,
-                        GamePlayerType.HUMAN, GameMode.ASYNC, questions(), null, null, Instant.now()),
-                new GameEvent.GameStartedEvent(
-                        GAME_ID, GameMode.ASYNC, Instant.now(), Instant.now().plusMillis(GameRules.MATCH_INTRO_MS))
-        };
-    }
-
-    private GameEvent.QuestionAnsweredEvent answered(Instant answeredAt) {
-        return new GameEvent.QuestionAnsweredEvent(
-                GAME_ID, GameRoundType.ROUND_1, "question-0", PLAYER_1, GamePlayerType.HUMAN,
-                GameQuestionChoice.A, true, answeredAt, 18, 2000);
+        return concat(created(), joined(PLAYER_1), joined(PLAYER_2),
+                new GameEvent.GameStartedEvent(GAME_ID, Instant.now(), Instant.now().plusMillis(GameRules.MATCH_INTRO_MS)));
     }
 
     private GameEvent.RoundStartedEvent roundStarted(Instant shownAt) {

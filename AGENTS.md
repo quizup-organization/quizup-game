@@ -10,9 +10,11 @@
 
 ## 1. Rôle
 
-Gestion des **parties** de quiz : création (bot), participation (join), réponse aux questions,
-scoring, annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisateur
-spécial (`QuizUpConstants.SYSTEM_USER_ID`).
+Gestion des **parties** de quiz à deux joueurs (humain ou bot) : création, présence dans la salle
+d'attente (`join`/`leave`), réponse aux questions, scoring, abandon (`forfeit`), fin (`end`) et
+annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisateur spécial
+(`QuizUpConstants.SYSTEM_USER_ID`). Plus de mode asynchrone/ghost : la partie ne démarre qu'une
+fois les deux joueurs présents.
 
 **Package** : `io.github.quizup.game`
 
@@ -27,10 +29,11 @@ exposée par le service.
 ## 3. Use cases (ports entrants — `domain/port/in/`)
 
 - `CreateGameUseCase` — création d'une partie
-- `JoinGameUseCase` — un joueur rejoint une partie
+- `JoinGameUseCase` — entrée dans la salle d'attente (idempotent)
+- `LeaveGameUseCase` — sortie de la salle d'attente avant démarrage (annule la partie)
+- `ForfeitGameUseCase` — abandon en cours (`ForfeitGameCommand`) : l'adversaire gagne
 - `AnswerQuestionUseCase` — réponse à une question d'un round
-- `CancelGameUseCase` — annulation d'une partie
-- `AbandonGameUseCase` — abandon/forfait d'une partie en cours (`EndGameCommand(forfeitById)`)
+- `CancelGameUseCase` — annulation système (expiration) avant démarrage
 - `GetGameUseCase` — récupération par id
 - `GetGameEventsUseCase` — lecture des événements (event store)
 - `SearchGameUseCase` — recherche paginée (`POST /search`, réservée aux futures surfaces d'administration)
@@ -68,8 +71,8 @@ choisit sa langue, avec repli déterministe FR → EN → premier contenu.
 - **Création** : la partie exige `GameRules.TOTAL_ROUNDS` (7) questions approuvées ; sinon
   `NotEnoughQuestionsProblem` (échec explicite, jamais de partie tronquée).
 - **Expiration** : `GameFlowSaga` planifie `GAME_EXPIRED` (24 h) à la création ; une partie jamais
-  terminée est annulée avant démarrage ou close avec forfait implicite après démarrage. La
-  deadline est annulée à `GameEndedEvent` / `GameRunRecordedEvent` / `GameCancelledEvent`.
+  terminée est annulée avant démarrage ou close au score après démarrage. La deadline est annulée à
+  `GameEndedEvent` / `GameCancelledEvent`.
 - **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
 
 ---

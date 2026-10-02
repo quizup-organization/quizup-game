@@ -3,7 +3,6 @@ package io.github.quizup.game.infrastructure.out.persistence.entity;
 import io.github.quizup.microservice.core.domain.model.search.FieldType;
 import io.github.quizup.microservice.core.domain.model.search.Searchable;
 import io.github.quizup.game.domain.model.BotDifficulty;
-import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameStatus;
 import jakarta.persistence.*;
@@ -47,11 +46,6 @@ public class GameEntity {
     @Searchable(type = FieldType.STRING)
     @Column(name = "player2_name")
     private String player2Name;
-
-    @Searchable(type = FieldType.STRING)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "mode", nullable = false, length = 10)
-    private GameMode mode;
 
     @Searchable(type = FieldType.STRING)
     @Enumerated(EnumType.STRING)

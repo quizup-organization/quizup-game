@@ -1,17 +1,16 @@
 -- V1: Création du schéma game
 -- Tables : game_entry, round_entry
--- Le joueur 2 est absent en run asynchrone solo (colonnes player2 nullables) et la difficulté
--- du bot est exposée pour rejouer un duel à l'identique.
+-- Une partie a toujours deux joueurs (un duel contre le bot utilise l'utilisateur système) ;
+-- la difficulté du bot est exposée pour rejouer un duel à l'identique.
 
 CREATE TABLE game_entry (
     game_id        VARCHAR(255)  NOT NULL,
     topic_id       VARCHAR(255)  NOT NULL,
     player1_id     VARCHAR(255)  NOT NULL,
     player1_name   VARCHAR(255)  NOT NULL,
-    player2_id     VARCHAR(255),
-    player2_name   VARCHAR(255),
-    mode           VARCHAR(10)   NOT NULL,   -- SYNC, ASYNC
-    player2Type    VARCHAR(10)   NOT NULL,   -- BOT, HUMAN, GHOST
+    player2_id     VARCHAR(255)  NOT NULL,
+    player2_name   VARCHAR(255)  NOT NULL,
+    player2Type    VARCHAR(10)   NOT NULL,   -- BOT, HUMAN
     bot_difficulty VARCHAR(10),              -- EASY, NORMAL, HARD, EXPERT
     status         VARCHAR(20)   NOT NULL,   -- CREATED, READY, IN_PROGRESS, FINISHED, CANCELED
     player1_score  INTEGER       DEFAULT 0,

@@ -19,7 +19,6 @@ public final class GameEntityMapper {
                 .player1Name(entity.getPlayer1Name())
                 .player2Id(entity.getPlayer2Id())
                 .player2Name(entity.getPlayer2Name())
-                .mode(entity.getMode())
                 .opponent(entity.getOpponent())
                 .botDifficulty(entity.getBotDifficulty())
                 .status(entity.getStatus())
@@ -41,7 +40,6 @@ public final class GameEntityMapper {
         entity.setPlayer1Name(game.player1Name());
         entity.setPlayer2Id(game.player2Id());
         entity.setPlayer2Name(game.player2Name());
-        entity.setMode(game.mode());
         entity.setOpponent(game.opponent());
         entity.setBotDifficulty(game.botDifficulty());
         entity.setStatus(game.status());

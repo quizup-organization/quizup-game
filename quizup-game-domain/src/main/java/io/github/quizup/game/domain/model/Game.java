@@ -13,7 +13,6 @@ public record Game(
         String player1Name,
         String player2Id,
         String player2Name,
-        GameMode mode,
         GamePlayerType opponent,
         BotDifficulty botDifficulty,
         GameStatus status,

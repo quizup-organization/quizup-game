@@ -17,10 +17,10 @@ public interface GameRepositoryPort {
     Optional<Game> findById(String gameId);
 
     /**
-     * Duel synchrone humain le plus récent auquel participe le joueur (pour le forfait
-     * lorsqu'il passe hors ligne). Vide s'il n'a aucune partie active de ce type.
+     * Partie active la plus récente à laquelle participe le joueur (pour le forfait
+     * lorsqu'il passe hors ligne). Vide s'il n'a aucune partie active.
      */
-    Optional<Game> findActiveSyncGameByPlayerId(String playerId);
+    Optional<Game> findActiveGameByPlayerId(String playerId);
 
     SearchResponse<Game> findAll(SearchRequest request);
 

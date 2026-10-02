@@ -40,6 +40,13 @@ public class GamePlayerAggregate {
     }
 
     /**
+     * Marque le joueur comme absent (sortie de la salle d'attente).
+     */
+    public void leave() {
+        this.present = false;
+    }
+
+    /**
      * Ajoute des points au score du joueur.
      */
     public void addScore(int points) {

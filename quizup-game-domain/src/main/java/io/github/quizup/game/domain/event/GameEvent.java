@@ -23,10 +23,8 @@ public interface GameEvent {
             String player2Id,
             String player2Name,
             GamePlayerType player2Type,
-            GameMode mode,
             List<GameQuestion> questions,
             BotDifficulty botDifficulty,
-            String ghostGameId,
             Instant createdAt
     ) implements GameEvent {
     }
@@ -38,9 +36,19 @@ public interface GameEvent {
     ) implements GameEvent {
     }
 
+    /**
+     * Un joueur a quitté la salle d'attente avant le démarrage ; la partie est annulée
+     * ({@code GAME_CANCELLED} suit immédiatement).
+     */
+    record GameLeftEvent(
+            String gameId,
+            String playerId,
+            Instant leftAt
+    ) implements GameEvent {
+    }
+
     record GameStartedEvent(
             String gameId,
-            GameMode mode,
             Instant startedAt,
             Instant firstRoundAt
     ) implements GameEvent {
@@ -50,6 +58,17 @@ public interface GameEvent {
             String gameId,
             String reason,
             Instant cancelledAt
+    ) implements GameEvent {
+    }
+
+    /**
+     * Un joueur a abandonné une partie en cours. L'adversaire est vainqueur ; l'état terminal
+     * est porté par le {@link GameEndedEvent} qui suit.
+     */
+    record GameForfeitedEvent(
+            String gameId,
+            String forfeiterId,
+            Instant forfeitedAt
     ) implements GameEvent {
     }
 
@@ -120,21 +139,7 @@ public interface GameEvent {
             int player1FastAnswers,
             int player2CorrectAnswers,
             int player2FastAnswers,
-            String forfeitById,
             Instant endedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * Fin d'un run asynchrone solo (perspective « record ») : le score est enregistré pour être
-     * rejoué plus tard. Aucun XP n'est attribué à ce stade — c'est le replay qui fait foi.
-     */
-    record GameRunRecordedEvent(
-            String gameId,
-            String playerId,
-            String topicId,
-            int score,
-            Instant recordedAt
     ) implements GameEvent {
     }
 }

@@ -1,7 +1,6 @@
 package io.github.quizup.game.domain.command;
 
 import io.github.quizup.game.domain.model.BotDifficulty;
-import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.microservice.core.domain.model.i18n.Language;
@@ -14,13 +13,11 @@ public interface GameCommand {
     String gameId();
 
     /**
-     * Crée une partie avec les deux joueurs déclarés.
-     * player2Id peut être null en mode ASYNC (run solo : le deuxième joueur est absent).
-     * player2Id = "BOT" si player2Type=BOT.
-     * ghostGameId référence un run asynchrone enregistré dont les questions sont réutilisées
-     * (mode replay) ; null pour un tirage aléatoire ou un run enregistré.
-     * {@code languages} = langues requises (union des langues des joueurs) : seules les questions
-     * disponibles dans **toutes** ces langues sont tirées (sélection stricte).
+     * Crée une partie avec les deux joueurs déclarés. {@code player2Id} est toujours requis :
+     * un duel contre le bot utilise {@code QuizUpConstants.SYSTEM_USER_ID} avec
+     * {@code player2Type = BOT}. {@code languages} = langues requises (union des langues des
+     * joueurs) : seules les questions disponibles dans **toutes** ces langues sont tirées
+     * (sélection stricte).
      */
     record CreateGameCommand(
             @TargetAggregateIdentifier String gameId,
@@ -29,17 +26,15 @@ public interface GameCommand {
             String player1Name,
             String player2Id,
             String player2Name,
-            GameMode mode,
             Set<Language> languages,
             GamePlayerType player2Type,
-            BotDifficulty botDifficulty,
-            String ghostGameId
+            BotDifficulty botDifficulty
     ) implements GameCommand {
     }
 
     /**
-     * Un joueur confirme sa présence dans la partie.
-     * Quand les deux sont présents → status passe à READY.
+     * Un joueur confirme sa présence dans la salle d'attente. Idempotent : un joueur déjà présent
+     * ne provoque aucun nouvel événement. Quand les deux sont présents → statut {@code READY}.
      */
     record JoinGameCommand(
             @TargetAggregateIdentifier String gameId,
@@ -48,16 +43,46 @@ public interface GameCommand {
     }
 
     /**
-     * Démarre la partie (READY → IN_PROGRESS, ou CREATED → IN_PROGRESS en mode ASYNC).
+     * Un joueur quitte la salle d'attente avant le démarrage. La partie est annulée
+     * (aucun round n'a été joué). En cours, utiliser {@link ForfeitGameCommand}.
      */
-    record StartGameCommand(
+    record LeaveGameCommand(
+            @TargetAggregateIdentifier String gameId,
+            String playerId
+    ) implements GameCommand {
+    }
+
+    /**
+     * Un joueur abandonne une partie en cours : l'adversaire est déclaré vainqueur.
+     */
+    record ForfeitGameCommand(
+            @TargetAggregateIdentifier String gameId,
+            String playerId
+    ) implements GameCommand {
+    }
+
+    /**
+     * Clôt la partie au score (fin normale après le dernier round, ou expiration serveur).
+     */
+    record EndGameCommand(
             @TargetAggregateIdentifier String gameId
     ) implements GameCommand {
     }
 
+    /**
+     * Annulation système avant démarrage (expiration) — distincte de la sortie joueur.
+     */
     record CancelGameCommand(
             @TargetAggregateIdentifier String gameId,
             String reason
+    ) implements GameCommand {
+    }
+
+    /**
+     * Démarre la partie : les deux joueurs sont présents ({@code READY}).
+     */
+    record StartGameCommand(
+            @TargetAggregateIdentifier String gameId
     ) implements GameCommand {
     }
 
@@ -84,25 +109,6 @@ public interface GameCommand {
     }
 
     record CloseRoundCommand(
-            @TargetAggregateIdentifier String gameId
-    ) implements GameCommand {
-    }
-
-    /**
-     * Termine la partie. {@code forfeitById} (optionnel) désigne le joueur qui abandonne :
-     * l'adversaire est alors déclaré vainqueur, quel que soit le score.
-     */
-    record EndGameCommand(
-            @TargetAggregateIdentifier String gameId,
-            String forfeitById
-    ) implements GameCommand {
-    }
-
-    /**
-     * Clôt un run asynchrone solo (perspective « record ») : enregistre le run sans attribuer
-     * de vainqueur ni d'XP. Le replay ultérieur produira le {@code GameEndedEvent} autoritaire.
-     */
-    record EndRunCommand(
             @TargetAggregateIdentifier String gameId
     ) implements GameCommand {
     }

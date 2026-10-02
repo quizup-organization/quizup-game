@@ -60,7 +60,6 @@ public class GameProjection {
                         .player1Name(event.player1Name())
                         .player2Id(event.player2Id())
                         .player2Name(event.player2Name())
-                        .mode(event.mode())
                         .opponent(event.player2Type())
                         .botDifficulty(event.botDifficulty())
                         .status(GameStatus.CREATED)
@@ -189,18 +188,6 @@ public class GameProjection {
         gameRepositoryPort.findById(event.gameId()).ifPresent(game ->
                 gameRepositoryPort.save(game.toBuilder()
                         .status(GameStatus.CANCELED)
-                        .build())
-        );
-    }
-
-    @EventHandler
-    @Transactional
-    public void on(GameEvent.GameRunRecordedEvent event) {
-        logger.debug("Projecting GameRunRecordedEvent: gameId={}", event.gameId());
-
-        gameRepositoryPort.findById(event.gameId()).ifPresent(game ->
-                gameRepositoryPort.save(game.toBuilder()
-                        .status(GameStatus.AWAITING_OPPONENT)
                         .build())
         );
     }

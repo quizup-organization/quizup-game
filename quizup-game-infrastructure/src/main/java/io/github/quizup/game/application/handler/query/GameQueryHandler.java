@@ -4,7 +4,6 @@ import io.github.quizup.microservice.core.domain.model.notification.EventEnvelop
 import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.Game;
-import io.github.quizup.game.domain.model.GameRunInfo;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
 import io.github.quizup.game.domain.port.out.GameEventStorePort;
@@ -46,13 +45,6 @@ public class GameQueryHandler {
     public List<EventEnvelope> handle(GameQuery.GetGameEventsQuery query) {
         logger.debug("Handling GetGameEventsQuery: gameId={}", query.gameId());
         return gameEventStorePort.findEventEnvelopesByGameId(query.gameId());
-    }
-
-    @QueryHandler
-    public Optional<GameRunInfo> handle(GameQuery.GetGameRunInfoQuery query) {
-        logger.debug("Handling GetGameRunInfoQuery: gameId={}", query.gameId());
-        return gameRepositoryPort.findById(query.gameId())
-                .map(game -> new GameRunInfo(game.gameId(), game.topicId(), game.player1Id(), game.mode()));
     }
 
     @QueryHandler

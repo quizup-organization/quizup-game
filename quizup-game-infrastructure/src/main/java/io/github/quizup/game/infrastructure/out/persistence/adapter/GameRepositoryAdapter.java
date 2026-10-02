@@ -5,7 +5,6 @@ import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchR
 import io.github.quizup.microservice.core.infrastructure.adapter.AnnotationSearchableEntity;
 import io.github.quizup.microservice.core.infrastructure.adapter.JpaSearchAdapter;
 import io.github.quizup.game.domain.model.Game;
-import io.github.quizup.game.domain.model.GameMode;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
@@ -50,11 +49,10 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Game> findActiveSyncGameByPlayerId(String playerId) {
+    public Optional<Game> findActiveGameByPlayerId(String playerId) {
         return gameJpaRepository.findActiveGamesByPlayerId(
                         playerId,
                         GameStatus.IN_PROGRESS,
-                        GameMode.SYNC,
                         GamePlayerType.HUMAN
                 ).stream()
                 .findFirst()

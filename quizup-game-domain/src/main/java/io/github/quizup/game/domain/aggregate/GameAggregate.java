@@ -4,7 +4,6 @@ import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.game.domain.port.out.GameEventStorePort;
 import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import org.apache.commons.lang3.StringUtils;
 import org.axonframework.commandhandling.CommandHandler;
@@ -24,12 +23,11 @@ import static java.util.Objects.isNull;
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 /**
- * GameAggregate — Cycle de vie d'une partie.
+ * GameAggregate — Cycle de vie d'une partie à deux joueurs (humain ou bot).
  * <p>
  * Utilise {@link GamePlayerAggregate} pour encapsuler l'état de chaque joueur
- * (identité, présence, score), éliminant les maps séparées et les if/else en cascade.
- * <p>
- * Les timeouts sont orchestrés par les sagas applicatives.
+ * (identité, présence, score). La partie ne démarre que lorsque les deux joueurs ont rejoint
+ * la salle d'attente. Les timeouts sont orchestrés par les sagas applicatives.
  */
 @Aggregate
 public class GameAggregate {
@@ -38,7 +36,6 @@ public class GameAggregate {
     @AggregateIdentifier
     private String gameId;
     private String topicId;
-    private GameMode mode;
     private GameStatus status;
     private final Map<GamePlayer, GamePlayerAggregate> players = new EnumMap<>(GamePlayer.class);
     private final Map<GameRoundType, GameRoundAggregate> rounds = new EnumMap<>(GameRoundType.class);
@@ -53,26 +50,25 @@ public class GameAggregate {
 
     @CommandHandler
     public GameAggregate(GameCommand.CreateGameCommand command,
-                         QuestionRepositoryPort questionRepositoryPort,
-                         GameEventStorePort gameEventStorePort) {
-        logger.info("Creating game: gameId={}, topicId={}, player1={}, player2={}, mode={}, player2Type={}",
-                command.gameId(), command.topicId(), command.player1Id(), command.player2Id(), command.mode(), command.player2Type());
+                         QuestionRepositoryPort questionRepositoryPort) {
+        logger.info("Creating game: gameId={}, topicId={}, player1={}, player2={}, player2Type={}",
+                command.gameId(), command.topicId(), command.player1Id(), command.player2Id(), command.player2Type());
 
         if (StringUtils.isBlank(command.topicId())) {
             throw new GameExceptions.MissingTopicProblem(command.gameId());
         }
-
         if (StringUtils.isBlank(command.player1Id())) {
             throw new GameExceptions.MissingPlayerProblem(command.gameId(), GamePlayer.PLAYER_1);
         }
-
-        // Le joueur 2 est requis en duel synchrone ; en asynchrone il est absent (run solo)
-        // ou représenté par le fantôme d'un run enregistré.
-        if (!GameMode.ASYNC.equals(command.mode()) && StringUtils.isBlank(command.player2Id())) {
+        if (StringUtils.isBlank(command.player2Id())) {
             throw new GameExceptions.MissingPlayerProblem(command.gameId(), GamePlayer.PLAYER_2);
         }
 
-        List<GameQuestion> questions = resolveQuestions(command, questionRepositoryPort, gameEventStorePort);
+        List<GameQuestion> questions = questionRepositoryPort.findRandomApprovedByTopicId(
+                command.topicId(),
+                GameRules.TOTAL_ROUNDS,
+                command.languages()
+        );
 
         if (questions.size() < GameRules.TOTAL_ROUNDS) {
             throw new GameExceptions.NotEnoughQuestionsProblem(
@@ -88,95 +84,109 @@ public class GameAggregate {
                         command.player2Id(),
                         command.player2Name(),
                         command.player2Type(),
-                        command.mode(),
                         questions,
                         command.botDifficulty(),
-                        command.ghostGameId(),
                         Instant.now()
                 )
         );
-
     }
 
     /**
-     * Un run en replay réutilise exactement les questions du run enregistré ({@code ghostGameId})
-     * pour que les deux runs soient comparables ; un run solo ou un duel synchrone tire des
-     * questions aléatoires.
+     * Un joueur confirme sa présence. Idempotent : un joueur déjà présent ne fait rien.
+     * Quand les deux joueurs sont présents → statut {@code READY}.
      */
-    private List<GameQuestion> resolveQuestions(GameCommand.CreateGameCommand command,
-                                                QuestionRepositoryPort questionRepositoryPort,
-                                                GameEventStorePort gameEventStorePort) {
-        if (StringUtils.isNotBlank(command.ghostGameId())) {
-            return gameEventStorePort.findEventsByGameId(command.ghostGameId()).stream()
-                    .filter(GameEvent.GameCreatedEvent.class::isInstance)
-                    .map(GameEvent.GameCreatedEvent.class::cast)
-                    .findFirst()
-                    .map(GameEvent.GameCreatedEvent::questions)
-                    .orElseThrow(() -> new GameExceptions.GhostRunNotFoundProblem(command.ghostGameId()));
-        }
-        return questionRepositoryPort.findRandomApprovedByTopicId(
-                command.topicId(),
-                GameRules.TOTAL_ROUNDS,
-                command.languages()
-        );
-    }
-
     @CommandHandler
     public void handle(GameCommand.JoinGameCommand command) {
         logger.info("Joining game: gameId={}, playerId={}", gameId, command.playerId());
 
+        GamePlayerAggregate player = resolvePlayer(command.playerId());
+
+        if (player.isPresent()) {
+            logger.debug("Player already present, ignoring join: gameId={}, playerId={}", gameId, command.playerId());
+            return;
+        }
         if (status != GameStatus.CREATED) {
             throw new GameExceptions.GameNotJoinableProblem(gameId, status.name());
         }
 
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
+        apply(new GameEvent.GameJoinedEvent(gameId, command.playerId(), Instant.now()));
+    }
 
-        if (player.isPresent()) {
-            throw new GameExceptions.PlayerAlreadyJoinedProblem(gameId, command.playerId());
+    /**
+     * Un joueur quitte la salle d'attente avant le démarrage : la partie est annulée.
+     */
+    @CommandHandler
+    public void handle(GameCommand.LeaveGameCommand command) {
+        logger.info("Leaving game waiting room: gameId={}, playerId={}", gameId, command.playerId());
+
+        if (status == GameStatus.FINISHED || status == GameStatus.CANCELED) {
+            return;
+        }
+        if (status == GameStatus.IN_PROGRESS) {
+            throw new GameExceptions.GameAlreadyStartedProblem(gameId, status.name());
         }
 
-        apply(
-                new GameEvent.GameJoinedEvent(
-                        gameId,
-                        command.playerId(),
-                        Instant.now()
-                )
-        );
+        resolvePlayer(command.playerId());
+
+        Instant now = Instant.now();
+        apply(new GameEvent.GameLeftEvent(gameId, command.playerId(), now));
+        apply(new GameEvent.GameCancelledEvent(gameId, "PLAYER_LEFT", now));
+    }
+
+    /**
+     * Un joueur abandonne une partie en cours : l'adversaire est déclaré vainqueur.
+     */
+    @CommandHandler
+    public void handle(GameCommand.ForfeitGameCommand command) {
+        logger.info("Forfeiting game: gameId={}, playerId={}", gameId, command.playerId());
+
+        if (status != GameStatus.IN_PROGRESS) {
+            throw new GameExceptions.GameNotInProgressProblem(gameId, status == null ? "UNKNOWN" : status.name());
+        }
+
+        GamePlayerAggregate forfeiter = resolvePlayer(command.playerId());
+        GamePlayerAggregate winner = opponentOf(forfeiter);
+
+        Instant now = Instant.now();
+        apply(new GameEvent.GameForfeitedEvent(gameId, command.playerId(), now));
+        apply(buildGameEndedEvent(winner.getPlayerId(), now));
+    }
+
+    /**
+     * Clôt la partie au score (fin normale après le dernier round, ou expiration serveur).
+     */
+    @CommandHandler
+    public void handle(GameCommand.EndGameCommand command) {
+        logger.info("Ending game: gameId={}", gameId);
+
+        if (status != GameStatus.IN_PROGRESS) {
+            throw new GameExceptions.GameNotInProgressProblem(gameId, status == null ? "UNKNOWN" : status.name());
+        }
+
+        apply(buildGameEndedEvent(resolveWinnerByScore(), Instant.now()));
+    }
+
+    @CommandHandler
+    public void handle(GameCommand.CancelGameCommand command) {
+        logger.info("Canceling game: gameId={}, reason={}", gameId, command.reason());
+
+        if (status == GameStatus.FINISHED || status == GameStatus.CANCELED) {
+            return;
+        }
+
+        apply(new GameEvent.GameCancelledEvent(gameId, command.reason(), Instant.now()));
     }
 
     @CommandHandler
     public void handle(GameCommand.StartGameCommand command) {
-        logger.info("Starting game: gameId={}, mode={}, status={}", gameId, mode, status);
+        logger.info("Starting game: gameId={}, status={}", gameId, status);
 
-        switch (mode) {
-            case SYNC -> {
-                if (status != GameStatus.READY) {
-                    throw new GameExceptions.GameNotReadyProblem(
-                            gameId,
-                            status.name()
-                    );
-                }
-            }
-            case ASYNC -> {
-                if (status != GameStatus.CREATED && status != GameStatus.READY) {
-                    throw new GameExceptions.GameNotStartableProblem(
-                            gameId,
-                            status.name()
-                    );
-                }
-            }
+        if (status != GameStatus.READY) {
+            throw new GameExceptions.GameNotReadyProblem(gameId, status.name());
         }
 
         Instant now = Instant.now();
-
-        apply(
-                new GameEvent.GameStartedEvent(
-                        gameId,
-                        mode,
-                        now,
-                        now.plusMillis(GameRules.MATCH_INTRO_MS)
-                )
-        );
+        apply(new GameEvent.GameStartedEvent(gameId, now, now.plusMillis(GameRules.MATCH_INTRO_MS)));
     }
 
     @CommandHandler
@@ -184,25 +194,17 @@ public class GameAggregate {
         logger.info("Starting round: gameId={}, round={}", gameId, currentRound);
 
         if (status != GameStatus.IN_PROGRESS) {
-            throw new GameExceptions.GameNotInProgressProblem(
-                    gameId,
-                    status.name()
-            );
+            throw new GameExceptions.GameNotInProgressProblem(gameId, status.name());
         }
 
         GameRoundAggregate round = rounds.get(currentRound);
-
         GameRoundStatus roundStatus = round.getStatus();
 
         if (roundStatus == GameRoundStatus.QUESTION_SHOWN || roundStatus == GameRoundStatus.ANSWERABLE) {
-            throw new GameExceptions.RoundNotStartableProblem(
-                    gameId,
-                    currentRound.name(), roundStatus.name()
-            );
+            throw new GameExceptions.RoundNotStartableProblem(gameId, currentRound.name(), roundStatus.name());
         }
 
         Instant now = Instant.now();
-
         apply(
                 new GameEvent.RoundStartedEvent(
                         gameId,
@@ -219,24 +221,16 @@ public class GameAggregate {
         logger.info("Revealing question: gameId={}, round={}", gameId, currentRound);
 
         if (status != GameStatus.IN_PROGRESS) {
-            throw new GameExceptions.GameNotInProgressProblem(
-                    gameId,
-                    status.name()
-            );
+            throw new GameExceptions.GameNotInProgressProblem(gameId, status.name());
         }
 
         GameRoundAggregate round = rounds.get(currentRound);
 
         if (round.getStatus() != GameRoundStatus.QUESTION_SHOWN) {
-            throw new GameExceptions.RoundNotRevealableProblem(
-                    gameId,
-                    currentRound.name(),
-                    round.getStatus().name()
-            );
+            throw new GameExceptions.RoundNotRevealableProblem(gameId, currentRound.name(), round.getStatus().name());
         }
 
         Instant now = Instant.now();
-
         apply(
                 new GameEvent.QuestionRevealedEvent(
                         gameId,
@@ -254,37 +248,24 @@ public class GameAggregate {
         if (StringUtils.isBlank(command.playerId())) {
             throw new GameExceptions.MissingPlayerIdProblem(gameId);
         }
-
         if (isNull(command.timestamp())) {
             throw new GameExceptions.MissingTimestampProblem(gameId);
         }
 
         GamePlayerAggregate player = resolvePlayer(command.playerId());
-
         GameRoundAggregate round = rounds.get(currentRound);
 
         if (!round.isAnswerable()) {
-            throw new GameExceptions.RoundNotRevealedProblem(
-                    gameId,
-                    currentRound.name(),
-                    round.getStatus().name()
-            );
+            throw new GameExceptions.RoundNotRevealedProblem(gameId, currentRound.name(), round.getStatus().name());
         }
-
         if (round.hasPlayerAnswered(player.getPlayer())) {
-            throw new GameExceptions.RoundAlreadyAnsweredProblem(
-                    gameId,
-                    currentRound.name(),
-                    command.playerId()
-            );
+            throw new GameExceptions.RoundAlreadyAnsweredProblem(gameId, currentRound.name(), command.playerId());
         }
 
         Duration timeToAnswer = Duration.between(round.getRevealedAt(), command.timestamp());
-
         boolean correct = command.choice() != null && command.choice() == round.getQuestion().correctAnswer();
 
         int pointsEarned = 0;
-
         if (correct) {
             pointsEarned = GameRules.getBasePoints(currentRound.isBonus())
                     + GameRules.calculateSpeedBonus(timeToAnswer.toSeconds(), currentRound.isBonus());
@@ -310,7 +291,6 @@ public class GameAggregate {
         );
     }
 
-
     @CommandHandler
     public void handle(GameCommand.CloseRoundCommand command) {
         logger.info("Closing round: gameId={}, round={}", gameId, currentRound);
@@ -318,11 +298,7 @@ public class GameAggregate {
         GameRoundAggregate round = rounds.get(currentRound);
 
         if (round.getStatus() != GameRoundStatus.ANSWERABLE) {
-            throw new GameExceptions.RoundNotRevealedProblem(
-                    gameId,
-                    currentRound.name(),
-                    round.getStatus().name()
-            );
+            throw new GameExceptions.RoundNotRevealedProblem(gameId, currentRound.name(), round.getStatus().name());
         }
 
         Instant now = Instant.now();
@@ -340,130 +316,6 @@ public class GameAggregate {
         );
     }
 
-    @CommandHandler
-    public void handle(GameCommand.EndGameCommand command) {
-        logger.info("Ending game: gameId={}, forfeitBy={}", gameId, command.forfeitById());
-
-        if (status != GameStatus.IN_PROGRESS) {
-            throw new GameExceptions.GameNotInProgressProblem(gameId, status == null ? "UNKNOWN" : status.name());
-        }
-
-        GamePlayerAggregate player1 = getPlayer(GamePlayer.PLAYER_1);
-        GamePlayerAggregate player2 = getPlayer(GamePlayer.PLAYER_2);
-
-        if (command.forfeitById() != null
-                && !command.forfeitById().equals(player1.getPlayerId())
-                && (player2 == null || !command.forfeitById().equals(player2.getPlayerId()))) {
-            throw new GameExceptions.PlayerNotInGameProblem(gameId, command.forfeitById());
-        }
-
-        String winner = resolveWinner(player1, player2, command.forfeitById());
-
-        apply(
-                new GameEvent.GameEndedEvent(
-                        gameId,
-                        winner,
-                        player1.getPlayerId(),
-                        player1.getPlayerName(),
-                        player2 != null ? player2.getPlayerId() : null,
-                        player2 != null ? player2.getPlayerName() : null,
-                        topicId,
-                        player1.getScore(),
-                        player2 != null ? player2.getScore() : 0,
-                        countCorrect(GamePlayer.PLAYER_1),
-                        countFast(GamePlayer.PLAYER_1),
-                        player2 != null ? countCorrect(GamePlayer.PLAYER_2) : 0,
-                        player2 != null ? countFast(GamePlayer.PLAYER_2) : 0,
-                        command.forfeitById(),
-                        Instant.now()
-                )
-        );
-    }
-
-    /**
-     * Vainqueur : l'abandon d'un joueur donne la victoire à l'adversaire ; sinon le meilleur
-     * score (égalité → pas de vainqueur). Un run async solo (pas de joueur 2) n'a pas de
-     * vainqueur.
-     */
-    private String resolveWinner(GamePlayerAggregate player1,
-                                 GamePlayerAggregate player2,
-                                 String forfeitById) {
-        if (player2 == null) {
-            return null;
-        }
-        if (forfeitById != null) {
-            if (forfeitById.equals(player1.getPlayerId())) {
-                return player2.getPlayerId();
-            }
-            if (forfeitById.equals(player2.getPlayerId())) {
-                return player1.getPlayerId();
-            }
-        }
-        if (player1.getScore() > player2.getScore()) {
-            return player1.getPlayerId();
-        }
-        if (player2.getScore() > player1.getScore()) {
-            return player2.getPlayerId();
-        }
-        return null;
-    }
-
-    /**
-     * Clôt un run asynchrone solo : enregistre le run (score du joueur présent) sans vainqueur
-     * ni XP. Le replay produira le {@code GameEndedEvent} autoritaire.
-     */
-    @CommandHandler
-    public void handle(GameCommand.EndRunCommand command) {
-        logger.info("Recording async run: gameId={}", gameId);
-
-        GamePlayerAggregate player1 = getPlayer(GamePlayer.PLAYER_1);
-
-        apply(
-                new GameEvent.GameRunRecordedEvent(
-                        gameId,
-                        player1.getPlayerId(),
-                        topicId,
-                        player1.getScore(),
-                        Instant.now()
-                )
-        );
-    }
-
-    private int countCorrect(GamePlayer player) {
-        return (int) rounds.values().stream()
-                .map(round -> round.getAnswer(player))
-                .filter(answer -> answer != null && answer.correct())
-                .count();
-    }
-
-    private int countFast(GamePlayer player) {
-        return (int) rounds.values().stream()
-                .filter(round -> {
-                    PlayerAnswer answer = round.getAnswer(player);
-
-                    if (answer == null || !answer.correct() || answer.answeredAt() == null || round.getRevealedAt() == null) {
-                        return false;
-                    }
-
-                    return Duration.between(round.getRevealedAt(), answer.answeredAt()).toSeconds()
-                            < GameRules.FAST_ANSWER_SECONDS;
-                })
-                .count();
-    }
-
-    @CommandHandler
-    public void handle(GameCommand.CancelGameCommand command) {
-        logger.info("Canceling game: gameId={}, reason={}", gameId, command.reason());
-        apply(
-                new GameEvent.GameCancelledEvent(
-                        gameId,
-                        command.reason(),
-                        Instant.now()
-                )
-        );
-    }
-
-
     // =============================================
     // EVENT SOURCING HANDLERS
     // =============================================
@@ -472,19 +324,13 @@ public class GameAggregate {
     public void on(GameEvent.GameCreatedEvent event) {
         this.gameId = event.gameId();
         this.topicId = event.topicId();
-        this.mode = event.mode();
         this.status = GameStatus.CREATED;
         this.currentRound = GameRoundType.ROUND_1;
 
         players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), event.player1Name(), GamePlayerType.HUMAN));
-
-        // En run asynchrone solo, le joueur 2 est absent : aucun sous-agrégat joueur n'est créé.
-        if (StringUtils.isNotBlank(event.player2Id())) {
-            players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Name(), event.player2Type()));
-        }
+        players.put(GamePlayer.PLAYER_2, new GamePlayerAggregate(GamePlayer.PLAYER_2, event.player2Id(), event.player2Name(), event.player2Type()));
 
         GameRoundType[] allRounds = GameRoundType.values();
-
         List<GameQuestion> questions = event.questions();
 
         for (int i = 0; i < questions.size(); i++) {
@@ -494,12 +340,16 @@ public class GameAggregate {
 
     @EventSourcingHandler
     public void on(GameEvent.GameJoinedEvent event) {
-        GamePlayerAggregate player = resolvePlayer(event.playerId());
-        player.join();
+        resolvePlayer(event.playerId()).join();
 
         if (getPlayer(GamePlayer.PLAYER_1).isPresent() && getPlayer(GamePlayer.PLAYER_2).isPresent()) {
             this.status = GameStatus.READY;
         }
+    }
+
+    @EventSourcingHandler
+    public void on(GameEvent.GameLeftEvent event) {
+        resolvePlayer(event.playerId()).leave();
     }
 
     @EventSourcingHandler
@@ -508,15 +358,23 @@ public class GameAggregate {
     }
 
     @EventSourcingHandler
+    public void on(GameEvent.GameCancelledEvent event) {
+        this.status = GameStatus.CANCELED;
+    }
+
+    @EventSourcingHandler
+    public void on(GameEvent.GameForfeitedEvent event) {
+        logger.debug("Game forfeited: gameId={}, forfeiterId={}", gameId, event.forfeiterId());
+    }
+
+    @EventSourcingHandler
     public void on(GameEvent.RoundStartedEvent event) {
-        GameRoundAggregate round = rounds.get(event.round());
-        round.showQuestion(event.shownAt());
+        rounds.get(event.round()).showQuestion(event.shownAt());
     }
 
     @EventSourcingHandler
     public void on(GameEvent.QuestionRevealedEvent event) {
-        GameRoundAggregate round = rounds.get(event.round());
-        round.reveal(event.revealedAt(), event.answerDeadlineAt());
+        rounds.get(event.round()).reveal(event.revealedAt(), event.answerDeadlineAt());
     }
 
     @EventSourcingHandler
@@ -546,16 +404,6 @@ public class GameAggregate {
         this.status = GameStatus.FINISHED;
     }
 
-    @EventSourcingHandler
-    public void on(GameEvent.GameCancelledEvent event) {
-        this.status = GameStatus.CANCELED;
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.GameRunRecordedEvent event) {
-        this.status = GameStatus.AWAITING_OPPONENT;
-    }
-
     // =============================================
     // UTILITY
     // =============================================
@@ -572,11 +420,71 @@ public class GameAggregate {
                 .orElseThrow(() -> new GameExceptions.PlayerNotInGameProblem(gameId, playerId));
     }
 
-    /**
-     * Accès direct à un joueur par son slot.
-     */
     private GamePlayerAggregate getPlayer(GamePlayer slot) {
         return players.get(slot);
+    }
+
+    private GamePlayerAggregate opponentOf(GamePlayerAggregate player) {
+        return GamePlayer.PLAYER_1.equals(player.getPlayer())
+                ? getPlayer(GamePlayer.PLAYER_2)
+                : getPlayer(GamePlayer.PLAYER_1);
+    }
+
+    private String resolveWinnerByScore() {
+        GamePlayerAggregate player1 = getPlayer(GamePlayer.PLAYER_1);
+        GamePlayerAggregate player2 = getPlayer(GamePlayer.PLAYER_2);
+
+        if (player1.getScore() > player2.getScore()) {
+            return player1.getPlayerId();
+        }
+        if (player2.getScore() > player1.getScore()) {
+            return player2.getPlayerId();
+        }
+        return null;
+    }
+
+    private GameEvent.GameEndedEvent buildGameEndedEvent(String winnerId, Instant endedAt) {
+        GamePlayerAggregate player1 = getPlayer(GamePlayer.PLAYER_1);
+        GamePlayerAggregate player2 = getPlayer(GamePlayer.PLAYER_2);
+
+        return new GameEvent.GameEndedEvent(
+                gameId,
+                winnerId,
+                player1.getPlayerId(),
+                player1.getPlayerName(),
+                player2.getPlayerId(),
+                player2.getPlayerName(),
+                topicId,
+                player1.getScore(),
+                player2.getScore(),
+                countCorrect(GamePlayer.PLAYER_1),
+                countFast(GamePlayer.PLAYER_1),
+                countCorrect(GamePlayer.PLAYER_2),
+                countFast(GamePlayer.PLAYER_2),
+                endedAt
+        );
+    }
+
+    private int countCorrect(GamePlayer player) {
+        return (int) rounds.values().stream()
+                .map(round -> round.getAnswer(player))
+                .filter(answer -> answer != null && answer.correct())
+                .count();
+    }
+
+    private int countFast(GamePlayer player) {
+        return (int) rounds.values().stream()
+                .filter(round -> {
+                    PlayerAnswer answer = round.getAnswer(player);
+
+                    if (answer == null || !answer.correct() || answer.answeredAt() == null || round.getRevealedAt() == null) {
+                        return false;
+                    }
+
+                    return Duration.between(round.getRevealedAt(), answer.answeredAt()).toSeconds()
+                            < GameRules.FAST_ANSWER_SECONDS;
+                })
+                .count();
     }
 
     private GameRoundType getNextRound(GameRoundType current) {

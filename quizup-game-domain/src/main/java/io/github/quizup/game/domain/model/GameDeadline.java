@@ -37,7 +37,4 @@ public interface GameDeadline {
 
     /** Réponse du bot — délai aléatoire borné par la difficulté, après révélation. */
     String BOT_ANSWERS = "bot-answers";
-
-    /** Réponse du fantôme — rejouée au temps enregistré du run, après révélation. */
-    String GHOST_ANSWERS = "ghost-answers";
 }

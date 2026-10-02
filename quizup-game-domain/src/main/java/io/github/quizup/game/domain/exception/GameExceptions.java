@@ -79,15 +79,6 @@ public interface GameExceptions {
         }
     }
 
-    class GhostRunNotFoundProblem extends GameProblem {
-        public GhostRunNotFoundProblem(String ghostGameId) {
-            super(ghostGameId, "urn:quizup:game:ghostRunNotFound",
-                    ProblemCategory.BUSINESS_RESOURCE_MISSING,
-                    "Ghost run not found",
-                    "The referenced async run " + ghostGameId + " was not found", null);
-        }
-    }
-
     // ── Join ──
 
     class GameNotJoinableProblem extends GameProblem {
@@ -132,12 +123,18 @@ public interface GameExceptions {
         }
     }
 
-    class GameNotStartableProblem extends GameProblem {
-        public GameNotStartableProblem(String gameId, String currentStatus) {
-            super(gameId, "urn:quizup:game:notStartable",
+    // ── Leave / Forfeit ──
+
+    /**
+     * Un joueur ne peut quitter une partie qu'avant son démarrage ; en cours, il doit abandonner.
+     */
+    class GameAlreadyStartedProblem extends GameProblem {
+        public GameAlreadyStartedProblem(String gameId, String currentStatus) {
+            super(gameId, "urn:quizup:game:alreadyStarted",
                     ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Game cannot be started",
-                    "Game " + gameId + " is in status " + currentStatus + " and cannot be started",
+                    "Game already started",
+                    "Game " + gameId + " is in status " + currentStatus
+                            + " and can no longer be left (forfeit instead)",
                     Map.of("currentStatus", currentStatus));
         }
     }
