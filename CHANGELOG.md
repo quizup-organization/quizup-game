@@ -1,3 +1,13 @@
+## [5.0.0](https://github.com/quizup-organization/quizup-game/compare/v4.0.0...v5.0.0) (2026-10-02)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** drop async mode, add explicit join/leave/forfeit/end commands
+
+### Features
+
+* **game:** drop async mode, add explicit join/leave/forfeit/end commands ([b1e6da7](https://github.com/quizup-organization/quizup-game/commit/b1e6da7928dcf878af427254f5ebdc30bec52391))
+
 ## [4.0.0](https://github.com/quizup-organization/quizup-game/compare/v3.0.0...v4.0.0) (2026-09-30)
 
 ### ⚠ BREAKING CHANGES
