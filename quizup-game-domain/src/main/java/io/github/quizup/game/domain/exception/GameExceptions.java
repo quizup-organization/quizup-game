@@ -198,4 +198,15 @@ public interface GameExceptions {
                     Map.of("round", round, "playerId", playerId));
         }
     }
+
+    /** Aucune partie en attente/en cours pour ce joueur (reprise : 404 côté façade). */
+    class NoCurrentGameProblem extends GameProblem {
+        public NoCurrentGameProblem(String playerId) {
+            super("player:" + playerId, "urn:quizup:game:noCurrentGame",
+                    ProblemCategory.BUSINESS_RESOURCE_MISSING,
+                    "Aucune partie en cours",
+                    "Aucune partie en attente ou en cours pour le joueur " + playerId,
+                    Map.of("playerId", playerId));
+        }
+    }
 }

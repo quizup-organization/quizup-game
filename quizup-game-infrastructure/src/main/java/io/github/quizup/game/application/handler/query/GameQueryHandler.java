@@ -42,6 +42,13 @@ public class GameQueryHandler {
     }
 
     @QueryHandler
+    public Game handle(GameQuery.GetCurrentGameQuery query) {
+        logger.debug("Handling GetCurrentGameQuery: playerId={}", query.playerId());
+        return gameRepositoryPort.findCurrentGameByPlayerId(query.playerId())
+                .orElseThrow(() -> new GameExceptions.NoCurrentGameProblem(query.playerId()));
+    }
+
+    @QueryHandler
     public List<EventEnvelope> handle(GameQuery.GetGameEventsQuery query) {
         logger.debug("Handling GetGameEventsQuery: gameId={}", query.gameId());
         return gameEventStorePort.findEventEnvelopesByGameId(query.gameId());

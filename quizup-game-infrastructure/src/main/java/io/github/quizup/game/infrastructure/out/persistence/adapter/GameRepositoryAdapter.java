@@ -61,6 +61,18 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Game> findCurrentGameByPlayerId(String playerId) {
+        return gameJpaRepository.findCurrentGamesByPlayerId(
+                        playerId,
+                        List.of(GameStatus.CREATED, GameStatus.READY, GameStatus.IN_PROGRESS),
+                        Limit.of(1))
+                .stream()
+                .findFirst()
+                .map(GameEntityMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SearchResponse<Game> findAll(SearchRequest request) {
         return gameJpaSearchAdapter.findAll(request)
                 .map(GameEntityMapper::toDomain);

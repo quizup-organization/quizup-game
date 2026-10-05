@@ -11,6 +11,13 @@ public interface GameQuery {
     record GetGameByIdQuery(String gameId) implements GameQuery {
     }
 
+    /**
+     * Partie en attente ou en cours du joueur (reprise après fermeture de l'app) : la plus
+     * récente parmi {@code CREATED/READY/IN_PROGRESS}. Absence ⇒ {@code NoCurrentGameProblem}.
+     */
+    record GetCurrentGameQuery(String playerId) implements GameQuery {
+    }
+
     record GetGameEventsQuery(String gameId) implements GameQuery {
     }
 
