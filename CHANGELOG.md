@@ -1,3 +1,9 @@
+## [5.1.1](https://github.com/quizup-organization/quizup-game/compare/v5.1.0...v5.1.1) (2026-10-05)
+
+### Bug Fixes
+
+* **game:** pin theme-domain 4.1.0 (resolution transitoire 4.0.0) ([a6fec65](https://github.com/quizup-organization/quizup-game/commit/a6fec652946ce691ca103059b8d5230eabc85fa7))
+
 ## [5.1.0](https://github.com/quizup-organization/quizup-game/compare/v5.0.1...v5.1.0) (2026-10-05)
 
 ### Features
