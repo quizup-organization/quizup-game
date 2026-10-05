@@ -40,6 +40,8 @@ exposée par le service.
 
 **Queries dédiées aux vues BFF** (`GameQuery.java`) :
 
+- `GetCurrentGameQuery(playerId)` → `Game` : partie en attente/en cours la plus récente
+  (`CREATED/READY/IN_PROGRESS`) pour la bannière de reprise ; absence ⇒ `NoCurrentGameProblem` (404).
 - `GetPlayerGamesQuery(playerId, topicId, opponentId, page, size)` → `PlayerGamesPage` : historique
   d'un joueur (filtres optionnels, plus récents d'abord), sans passer par le search.
 - `GetPopularTopicsQuery(since, limit)` → `List<TopicPopularity>` : thèmes les plus joués
