@@ -1,3 +1,9 @@
+## [5.1.0](https://github.com/quizup-organization/quizup-game/compare/v5.0.1...v5.1.0) (2026-10-05)
+
+### Features
+
+* **game:** query de la partie courante (reprise) ([5dbf952](https://github.com/quizup-organization/quizup-game/commit/5dbf9527859d5e09bda44923b865084fcf7c59c1))
+
 ## [5.0.1](https://github.com/quizup-organization/quizup-game/compare/v5.0.0...v5.0.1) (2026-10-05)
 
 ### Bug Fixes
