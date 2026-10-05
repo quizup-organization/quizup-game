@@ -23,6 +23,13 @@ public interface GameRepositoryPort {
     Optional<Game> findActiveGameByPlayerId(String playerId);
 
     /**
+     * Partie terminée la plus récente à laquelle participe le joueur (présence sur l'écran de
+     * résultat : libérée lorsque le joueur repasse hors ligne). Vide s'il n'a aucune partie
+     * terminée.
+     */
+    Optional<Game> findLatestFinishedGameByPlayerId(String playerId);
+
+    /**
      * Partie en attente ou en cours la plus récente du joueur (`CREATED/READY/IN_PROGRESS`),
      * pour la reprise depuis l'application.
      */

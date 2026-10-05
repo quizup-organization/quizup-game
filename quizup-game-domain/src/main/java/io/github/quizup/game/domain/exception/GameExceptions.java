@@ -209,4 +209,78 @@ public interface GameExceptions {
                     Map.of("playerId", playerId));
         }
     }
+
+    // ── Rematch ──
+
+    /** Une revanche ne peut être demandée/acceptée/confirmée qu'après la fin de la partie. */
+    class GameNotFinishedProblem extends GameProblem {
+        public GameNotFinishedProblem(String gameId, String currentStatus) {
+            super(gameId, "urn:quizup:game:notFinished",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Game is not finished",
+                    "Game " + gameId + " is in status " + currentStatus + " but must be FINISHED",
+                    Map.of("currentStatus", currentStatus));
+        }
+    }
+
+    /** Une revanche n'est pas possible face à un bot (seuls les duels humains se rejouent). */
+    class BotRematchNotAllowedProblem extends GameProblem {
+        public BotRematchNotAllowedProblem(String gameId) {
+            super(gameId, "urn:quizup:game:botRematchNotAllowed",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Bot rematch not allowed",
+                    "Game " + gameId + " opposes a bot and cannot be rematched", null);
+        }
+    }
+
+    /** Les deux joueurs doivent être présents sur l'écran de résultat pour se rejouer. */
+    class RematchPlayersNotPresentProblem extends GameProblem {
+        public RematchPlayersNotPresentProblem(String gameId) {
+            super(gameId, "urn:quizup:game:rematchPlayersNotPresent",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Players not present",
+                    "Both players must be present to rematch game " + gameId, null);
+        }
+    }
+
+    /** Une revanche requiert au moins une langue (langues requises pour la nouvelle partie). */
+    class MissingLanguagesProblem extends GameProblem {
+        public MissingLanguagesProblem(String gameId) {
+            super(gameId, "urn:quizup:game:missingLanguages",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Languages required",
+                    "At least one language is required to request a rematch of game " + gameId, null);
+        }
+    }
+
+    /** Aucune demande de revanche en attente sur cette partie. */
+    class RematchNotRequestedProblem extends GameProblem {
+        public RematchNotRequestedProblem(String gameId) {
+            super(gameId, "urn:quizup:game:rematchNotRequested",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Rematch not requested",
+                    "Game " + gameId + " has no pending rematch request", null);
+        }
+    }
+
+    /** Seul le demandeur peut annuler sa demande de revanche. */
+    class NotRematchRequesterProblem extends GameProblem {
+        public NotRematchRequesterProblem(String gameId, String playerId) {
+            super(gameId, "urn:quizup:game:notRematchRequester",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Not the rematch requester",
+                    "Player " + playerId + " did not request the rematch of game " + gameId,
+                    Map.of("playerId", playerId));
+        }
+    }
+
+    /** La revanche doit être acceptée avant d'être confirmée par la saga. */
+    class RematchNotAcceptedProblem extends GameProblem {
+        public RematchNotAcceptedProblem(String gameId) {
+            super(gameId, "urn:quizup:game:rematchNotAccepted",
+                    ProblemCategory.BUSINESS_INVALID_COMMAND,
+                    "Rematch not accepted",
+                    "The rematch of game " + gameId + " has not been accepted yet", null);
+        }
+    }
 }

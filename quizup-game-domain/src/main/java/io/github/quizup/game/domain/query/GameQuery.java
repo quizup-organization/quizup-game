@@ -39,4 +39,10 @@ public interface GameQuery {
      */
     record GetPopularTopicsQuery(Instant since, int limit) implements GameQuery {
     }
+
+    /**
+     * Résultat détaillé d'une partie du point de vue d'un joueur (écran de fin).
+     */
+    record GetGameResultQuery(String gameId, String playerId) implements GameQuery {
+    }
 }

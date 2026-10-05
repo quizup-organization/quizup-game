@@ -1,5 +1,13 @@
 package io.github.quizup.game.application.handler.query;
 
+import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.GamePlayerType;
+import io.github.quizup.game.domain.model.GameQuestionChoice;
+import io.github.quizup.game.domain.model.GameResult;
+import io.github.quizup.game.domain.model.GameRound;
+import io.github.quizup.game.domain.model.GameRoundStatus;
+import io.github.quizup.game.domain.model.GameRoundType;
+import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
 import io.github.quizup.game.domain.port.out.GameEventStorePort;
@@ -9,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -49,5 +58,57 @@ class GameQueryHandlerTest {
 
         assertEquals(List.of(new TopicPopularity("topic-1", 12)), result);
         verify(repository).findPopularTopics(since, 5);
+    }
+
+    @Test
+    void game_result_computes_score_breakdown_with_bonus_round() {
+        when(repository.findById("game-1")).thenReturn(Optional.of(finishedGame()));
+
+        GameResult result = handler.handle(new GameQuery.GetGameResultQuery("game-1", "player-1"));
+
+        GameResult expected = new GameResult(
+                "game-1", "topic-1", "player-1", "Alpha", "player-2", "Bravo",
+                "player-1", "player-2", 48, 10, "player-1", false,
+                30, 26, 2, 2, 3, 3);
+        assertEquals(expected, result);
+    }
+
+    private static Game finishedGame() {
+        return Game.builder()
+                .gameId("game-1")
+                .topicId("topic-1")
+                .player1Id("player-1")
+                .player1Name("Alpha")
+                .player2Id("player-2")
+                .player2Name("Bravo")
+                .opponent(GamePlayerType.HUMAN)
+                .status(GameStatus.FINISHED)
+                .player1Score(48)
+                .player2Score(10)
+                .winnerId("player-1")
+                .createdAt(Instant.parse("2026-09-01T00:00:00Z"))
+                .endedAt(Instant.parse("2026-09-01T00:05:00Z"))
+                .rounds(List.of(
+                        round(GameRoundType.ROUND_1, GameQuestionChoice.A, true, 18, 2000L),
+                        round(GameRoundType.ROUND_7, GameQuestionChoice.A, true, 38, 1500L),
+                        round(GameRoundType.ROUND_2, GameQuestionChoice.A, false, 0, 4000L)))
+                .build();
+    }
+
+    private static GameRound round(GameRoundType type,
+                                   GameQuestionChoice correctAnswer,
+                                   boolean sameChoice,
+                                   int points,
+                                   Long timeMs) {
+        return GameRound.builder()
+                .round(type)
+                .questionId("question-" + type.name())
+                .questionText("Question " + type.name())
+                .correctAnswer(correctAnswer)
+                .player1Choice(sameChoice ? correctAnswer : GameQuestionChoice.B)
+                .player1Points(points)
+                .player1TimeMs(timeMs)
+                .status(GameRoundStatus.CLOSED)
+                .build();
     }
 }

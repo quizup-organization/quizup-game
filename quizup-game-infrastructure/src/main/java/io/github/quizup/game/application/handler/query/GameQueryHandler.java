@@ -4,6 +4,7 @@ import io.github.quizup.microservice.core.domain.model.notification.EventEnvelop
 import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.GameResult;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
 import io.github.quizup.game.domain.port.out.GameEventStorePort;
@@ -70,5 +71,13 @@ public class GameQueryHandler {
     public List<TopicPopularity> handle(GameQuery.GetPopularTopicsQuery query) {
         logger.debug("Handling GetPopularTopicsQuery: since={}, limit={}", query.since(), query.limit());
         return gameRepositoryPort.findPopularTopics(query.since(), query.limit());
+    }
+
+    @QueryHandler
+    public GameResult handle(GameQuery.GetGameResultQuery query) {
+        logger.debug("Handling GetGameResultQuery: gameId={}, playerId={}", query.gameId(), query.playerId());
+        return gameRepositoryPort.findById(query.gameId())
+                .map(game -> GameResult.from(game, query.playerId()))
+                .orElseThrow(() -> new GameExceptions.GameNotFoundProblem(query.gameId()));
     }
 }

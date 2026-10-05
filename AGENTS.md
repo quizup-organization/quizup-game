@@ -16,6 +16,13 @@ annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisate
 (`QuizUpConstants.SYSTEM_USER_ID`). Plus de mode asynchrone/ghost : la partie ne démarre qu'une
 fois les deux joueurs présents.
 
+La **présence** est également suivie sur l'**écran de résultat** : `GameEndedEvent` remet les deux
+joueurs absents, `join`/`leave` restent acceptés en `FINISHED` (présence seule, sans rejouer le
+statut), et une déconnexion (`PlayerWentOfflineEvent`) sort le joueur de la dernière partie terminée.
+Ce socle alimente la **revanche** (`RequestRematch/AcceptRematch/DeclineRematch/CancelRematch`) :
+demande possible seulement si les deux joueurs sont présents et humains ; l'acceptation crée une
+nouvelle partie via `RematchSaga` (mêmes joueurs/topic/langues), avec deadline d'expiration de 60 s.
+
 **Package** : `io.github.quizup.game`
 
 ---
@@ -49,6 +56,9 @@ exposée par le service.
 - `GetGameEventsQuery(gameId)` → `List<EventEnvelope>` (SDK) : event store exposé avec le payload
   **typé** via `eventType` (codec du query bus distribué). Le mapping vers les notifications web
   (`GameNotification`, annotations Jackson) est fait par le **BFF**, pas par ce service.
+- `GetGameResultQuery(gameId, playerId)` → `GameResult` : composition de fin de duel pour l'écran de
+  résultat (scores, vainqueur, `botGame`, `basePoints`, `speedBonus`, `correctAnswers`, `fastAnswers`,
+  `answeredRounds`/`totalRounds`) — les règles de scoring restent dans le domaine (`GameRules`).
 
 ---
 
@@ -79,6 +89,10 @@ choisit sa langue, avec repli déterministe FR → EN → premier contenu.
   (`NO_SHOW_START`) — plus de salle fantôme en attendant l'expiration de 24 h. Annulé à
   `GameStartedEvent`.
 - **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
+- **Revanche** : `REMATCH_EXPIRY` (60 s) — sans acceptation, la demande est annulée
+  (`RematchCancelledEvent("EXPIRED")`) ; un départ de l'écran de résultat annule aussi la demande
+  (`PLAYER_LEFT`). `RematchSaga` crée la partie à l'acceptation puis `ConfirmRematchCommand`
+  publie `RematchStartedEvent(newGameId)` (échec de création ⇒ `CREATE_FAILED`).
 
 ---
 
