@@ -73,6 +73,9 @@ choisit sa langue, avec repli déterministe FR → EN → premier contenu.
 - **Expiration** : `GameFlowSaga` planifie `GAME_EXPIRED` (24 h) à la création ; une partie jamais
   terminée est annulée avant démarrage ou close au score après démarrage. La deadline est annulée à
   `GameEndedEvent` / `GameCancelledEvent`.
+- **Garde-fou de démarrage** : `START_TIMEOUT` (90 s) annule une partie jamais démarrée
+  (`NO_SHOW_START`) — plus de salle fantôme en attendant l'expiration de 24 h. Annulé à
+  `GameStartedEvent`.
 - **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
 
 ---

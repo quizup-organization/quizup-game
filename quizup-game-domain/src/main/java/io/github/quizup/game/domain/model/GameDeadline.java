@@ -20,6 +20,13 @@ public interface GameDeadline {
     Duration GAME_EXPIRED_TIMEOUT = Duration.ofHours(GAME_TIMEOUT_HOURS);
 
     /**
+     * Fenêtre laissée aux deux joueurs pour entrer dans l'arène après création : sans les deux
+     * « joins », la partie est annulée (`NO_SHOW_START`) plutôt que d'attendre 24 h.
+     */
+    String START_TIMEOUT = "game-start-timeout";
+    Duration START_TIMEOUT_DURATION = Duration.ofSeconds(90);
+
+    /**
      * Révélation des réponses : la question est affichée seule pendant {@code QUESTION_REVEAL_MS},
      * puis la saga émet la révélation et arme le chrono du round.
      */
