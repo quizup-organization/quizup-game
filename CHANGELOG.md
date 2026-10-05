@@ -1,3 +1,9 @@
+## [5.0.1](https://github.com/quizup-organization/quizup-game/compare/v5.0.0...v5.0.1) (2026-10-05)
+
+### Bug Fixes
+
+* **game:** annule une partie jamais demarree (START_TIMEOUT 90 s) ([f5e1cff](https://github.com/quizup-organization/quizup-game/commit/f5e1cff92bb2e8f766a693ca6383f97959396af7))
+
 ## [5.0.0](https://github.com/quizup-organization/quizup-game/compare/v4.0.0...v5.0.0) (2026-10-02)
 
 ### ⚠ BREAKING CHANGES
