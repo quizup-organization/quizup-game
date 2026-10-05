@@ -1,3 +1,9 @@
+## [5.2.0](https://github.com/quizup-organization/quizup-game/compare/v5.1.1...v5.2.0) (2026-10-05)
+
+### Features
+
+* **game:** revanche native, presence ecran de resultat et query de resultat ([4494e4d](https://github.com/quizup-organization/quizup-game/commit/4494e4d5d176eb2685c41ded62a8ce720a60a083))
+
 ## [5.1.1](https://github.com/quizup-organization/quizup-game/compare/v5.1.0...v5.1.1) (2026-10-05)
 
 ### Bug Fixes
