@@ -79,28 +79,6 @@ public interface GameExceptions {
         }
     }
 
-    // ── Join ──
-
-    class GameNotJoinableProblem extends GameProblem {
-        public GameNotJoinableProblem(String gameId, String currentStatus) {
-            super(gameId, "urn:quizup:game:notJoinable",
-                    ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Game is not joinable",
-                    "Game " + gameId + " is in status " + currentStatus + " and cannot be joined",
-                    Map.of("currentStatus", currentStatus));
-        }
-    }
-
-    class PlayerAlreadyJoinedProblem extends GameProblem {
-        public PlayerAlreadyJoinedProblem(String gameId, String playerId) {
-            super(gameId, "urn:quizup:game:playerAlreadyJoined",
-                    ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Player already joined",
-                    "Player " + playerId + " has already joined game " + gameId,
-                    Map.of("playerId", playerId));
-        }
-    }
-
     class PlayerNotInGameProblem extends GameProblem {
         public PlayerNotInGameProblem(String gameId, String playerId) {
             super(gameId, "urn:quizup:game:playerNotInGame",
@@ -108,34 +86,6 @@ public interface GameExceptions {
                     "Player not in game",
                     "Player " + playerId + " is not a participant of game " + gameId,
                     Map.of("playerId", playerId));
-        }
-    }
-
-    // ── Start ──
-
-    class GameNotReadyProblem extends GameProblem {
-        public GameNotReadyProblem(String gameId, String currentStatus) {
-            super(gameId, "urn:quizup:game:notReady",
-                    ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Game is not ready to start",
-                    "Game " + gameId + " is in status " + currentStatus + " but both players must be present",
-                    Map.of("currentStatus", currentStatus));
-        }
-    }
-
-    // ── Leave / Forfeit ──
-
-    /**
-     * Un joueur ne peut quitter une partie qu'avant son démarrage ; en cours, il doit abandonner.
-     */
-    class GameAlreadyStartedProblem extends GameProblem {
-        public GameAlreadyStartedProblem(String gameId, String currentStatus) {
-            super(gameId, "urn:quizup:game:alreadyStarted",
-                    ProblemCategory.BUSINESS_INVALID_COMMAND,
-                    "Game already started",
-                    "Game " + gameId + " is in status " + currentStatus
-                            + " and can no longer be left (forfeit instead)",
-                    Map.of("currentStatus", currentStatus));
         }
     }
 

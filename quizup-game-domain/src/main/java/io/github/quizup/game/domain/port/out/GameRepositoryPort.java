@@ -23,8 +23,8 @@ public interface GameRepositoryPort {
     Optional<Game> findActiveGameByPlayerId(String playerId);
 
     /**
-     * Partie en attente ou en cours la plus récente du joueur (`CREATED/READY/IN_PROGRESS`),
-     * pour la reprise depuis l'application.
+     * Partie en cours la plus récente du joueur (`IN_PROGRESS`), pour la reprise depuis
+     * l'application.
      */
     Optional<Game> findCurrentGameByPlayerId(String playerId);
 

@@ -75,6 +75,7 @@ public class GameAggregate {
                     command.gameId(), command.topicId(), questions.size(), command.languages());
         }
 
+        Instant now = Instant.now();
         apply(
                 new GameEvent.GameCreatedEvent(
                         command.gameId(),
@@ -88,51 +89,12 @@ public class GameAggregate {
                         command.botDifficulty(),
                         command.player1Progress(),
                         command.player2Progress(),
-                        Instant.now()
+                        now
                 )
         );
-    }
-
-    /**
-     * Un joueur confirme sa présence dans la salle d'attente (avant démarrage). Idempotent : un
-     * joueur déjà présent ne fait rien. Quand les deux joueurs sont présents → statut
-     * {@code READY}.
-     */
-    @CommandHandler
-    public void handle(GameCommand.JoinGameCommand command) {
-        logger.info("Joining game: gameId={}, playerId={}", gameId, command.playerId());
-
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-
-        if (player.isPresent()) {
-            logger.debug("Player already present, ignoring join: gameId={}, playerId={}", gameId, command.playerId());
-            return;
-        }
-        if (status == GameStatus.CREATED) {
-            apply(new GameEvent.GameJoinedEvent(gameId, command.playerId(), Instant.now()));
-            return;
-        }
-
-        throw new GameExceptions.GameNotJoinableProblem(gameId, status.name());
-    }
-
-    /**
-     * Un joueur quitte la partie avant démarrage : la partie est annulée.
-     */
-    @CommandHandler
-    public void handle(GameCommand.LeaveGameCommand command) {
-        logger.info("Leaving game: gameId={}, playerId={}", gameId, command.playerId());
-
-        if (status == GameStatus.CANCELED || status == GameStatus.FINISHED) {
-            return;
-        }
-        if (status == GameStatus.IN_PROGRESS) {
-            throw new GameExceptions.GameAlreadyStartedProblem(gameId, status.name());
-        }
-
-        Instant now = Instant.now();
-        apply(new GameEvent.GameLeftEvent(gameId, command.playerId(), now));
-        apply(new GameEvent.GameCancelledEvent(gameId, "PLAYER_LEFT", now));
+        // La partie démarre immédiatement (présence garantie en amont par le salon/l'appariement).
+        apply(new GameEvent.GameStartedEvent(
+                command.gameId(), now, now.plusMillis(GameRules.MATCH_INTRO_MS)));
     }
 
     /**
@@ -177,18 +139,6 @@ public class GameAggregate {
         }
 
         apply(new GameEvent.GameCancelledEvent(gameId, command.reason(), Instant.now()));
-    }
-
-    @CommandHandler
-    public void handle(GameCommand.StartGameCommand command) {
-        logger.info("Starting game: gameId={}, status={}", gameId, status);
-
-        if (status != GameStatus.READY) {
-            throw new GameExceptions.GameNotReadyProblem(gameId, status.name());
-        }
-
-        Instant now = Instant.now();
-        apply(new GameEvent.GameStartedEvent(gameId, now, now.plusMillis(GameRules.MATCH_INTRO_MS)));
     }
 
     @CommandHandler
@@ -326,7 +276,7 @@ public class GameAggregate {
     public void on(GameEvent.GameCreatedEvent event) {
         this.gameId = event.gameId();
         this.topicId = event.topicId();
-        this.status = GameStatus.CREATED;
+        this.status = GameStatus.IN_PROGRESS;
         this.currentRound = GameRoundType.ROUND_1;
 
         players.put(GamePlayer.PLAYER_1, new GamePlayerAggregate(GamePlayer.PLAYER_1, event.player1Id(), event.player1Name(), GamePlayerType.HUMAN));
@@ -338,20 +288,6 @@ public class GameAggregate {
         for (int i = 0; i < questions.size(); i++) {
             rounds.put(allRounds[i], new GameRoundAggregate(allRounds[i], questions.get(i)));
         }
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.GameJoinedEvent event) {
-        resolvePlayer(event.playerId()).join();
-
-        if (status == GameStatus.CREATED && bothPlayersPresent()) {
-            this.status = GameStatus.READY;
-        }
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.GameLeftEvent event) {
-        resolvePlayer(event.playerId()).leave();
     }
 
     @EventSourcingHandler
@@ -404,8 +340,6 @@ public class GameAggregate {
     @EventSourcingHandler
     public void on(GameEvent.GameEndedEvent event) {
         this.status = GameStatus.FINISHED;
-        getPlayer(GamePlayer.PLAYER_1).leave();
-        getPlayer(GamePlayer.PLAYER_2).leave();
     }
 
     // =============================================
@@ -432,10 +366,6 @@ public class GameAggregate {
         return GamePlayer.PLAYER_1.equals(player.getPlayer())
                 ? getPlayer(GamePlayer.PLAYER_2)
                 : getPlayer(GamePlayer.PLAYER_1);
-    }
-
-    private boolean bothPlayersPresent() {
-        return getPlayer(GamePlayer.PLAYER_1).isPresent() && getPlayer(GamePlayer.PLAYER_2).isPresent();
     }
 
     private String resolveWinnerByScore() {

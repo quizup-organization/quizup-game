@@ -39,26 +39,6 @@ public interface GameCommand {
     }
 
     /**
-     * Un joueur confirme sa présence dans la salle d'attente. Idempotent : un joueur déjà présent
-     * ne provoque aucun nouvel événement. Quand les deux sont présents → statut {@code READY}.
-     */
-    record JoinGameCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId
-    ) implements GameCommand {
-    }
-
-    /**
-     * Un joueur quitte la salle d'attente avant le démarrage. La partie est annulée
-     * (aucun round n'a été joué). En cours, utiliser {@link ForfeitGameCommand}.
-     */
-    record LeaveGameCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId
-    ) implements GameCommand {
-    }
-
-    /**
      * Un joueur abandonne une partie en cours : l'adversaire est déclaré vainqueur.
      */
     record ForfeitGameCommand(
@@ -81,14 +61,6 @@ public interface GameCommand {
     record CancelGameCommand(
             @TargetAggregateIdentifier String gameId,
             String reason
-    ) implements GameCommand {
-    }
-
-    /**
-     * Démarre la partie : les deux joueurs sont présents ({@code READY}).
-     */
-    record StartGameCommand(
-            @TargetAggregateIdentifier String gameId
     ) implements GameCommand {
     }
 

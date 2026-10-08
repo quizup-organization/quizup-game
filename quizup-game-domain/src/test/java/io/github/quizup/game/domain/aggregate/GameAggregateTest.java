@@ -33,7 +33,8 @@ import static org.mockito.Mockito.when;
  * Test Axon in-memory de l'agrégat {@link GameAggregate} via {@link AggregateTestFixture}.
  *
  * <p>100 % in-memory : event store de l'agrégat en mémoire, aucun Postgres ni Axon Server.
- * Le port sortant {@link QuestionRepositoryPort} est un mock.
+ * Le port sortant {@link QuestionRepositoryPort} est un mock. La partie démarre immédiatement à
+ * la création (émission de {@code GameCreatedEvent} puis {@code GameStartedEvent}).</p>
  */
 class GameAggregateTest {
 
@@ -53,16 +54,19 @@ class GameAggregateTest {
     }
 
     @Test
-    void createGame_appliesGameCreatedEvent() {
+    void createGame_appliesCreatedThenStarted() {
         QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
         when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
 
         fixture.registerInjectableResource(questionRepositoryPort)
                 .givenNoPriorActivity()
                 .when(createCommand())
-                .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameCreatedEvent.class,
-                        e -> ((GameEvent.GameCreatedEvent) e).gameId().equals(GAME_ID)));
+                        e -> ((GameEvent.GameCreatedEvent) e).gameId().equals(GAME_ID)))
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
+                        GameEvent.GameStartedEvent.class,
+                        e -> ((GameEvent.GameStartedEvent) e).gameId().equals(GAME_ID)));
     }
 
     @Test
@@ -73,7 +77,7 @@ class GameAggregateTest {
         fixture.registerInjectableResource(questionRepositoryPort)
                 .givenNoPriorActivity()
                 .when(createCommand())
-                .expectEventsMatching(QuizUpAxonMatchers.singlePayloadMatching(
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameCreatedEvent.class,
                         e -> {
                             GameEvent.GameCreatedEvent created = (GameEvent.GameCreatedEvent) e;
@@ -108,40 +112,10 @@ class GameAggregateTest {
     }
 
     @Test
-    void joinGame_isIdempotent() {
-        fixture.given(concat(created(), joined(PLAYER_1), joined(PLAYER_2)))
-                .when(new GameCommand.JoinGameCommand(GAME_ID, PLAYER_1))
-                .expectNoEvents();
-    }
-
-    @Test
-    void joinAfterFinished_isRejected() {
-        fixture.given(finishedWithoutPresence())
-                .when(new GameCommand.JoinGameCommand(GAME_ID, PLAYER_1))
-                .expectException(GameExceptions.GameNotJoinableProblem.class);
-    }
-
-    @Test
-    void leaveBeforeStart_cancelsGame() {
-        fixture.given(concat(created(), joined(PLAYER_1)))
-                .when(new GameCommand.LeaveGameCommand(GAME_ID, PLAYER_1))
-                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
-                        GameEvent.GameCancelledEvent.class,
-                        e -> "PLAYER_LEFT".equals(((GameEvent.GameCancelledEvent) e).reason())));
-    }
-
-    @Test
-    void leaveAfterStart_isRejected() {
-        fixture.given(readyGame())
-                .when(new GameCommand.LeaveGameCommand(GAME_ID, PLAYER_1))
-                .expectException(GameExceptions.GameAlreadyStartedProblem.class);
-    }
-
-    @Test
     void answerBeforeReveal_isRejected() {
         Instant shownAt = Instant.now();
 
-        fixture.given(concat(readyGame(), roundStarted(shownAt)))
+        fixture.given(concat(created(), roundStarted(shownAt)))
                 .when(new GameCommand.AnswerQuestionCommand(
                         GAME_ID, PLAYER_1, GameQuestionChoice.A, shownAt.plusMillis(500)))
                 .expectException(GameExceptions.RoundNotRevealedProblem.class);
@@ -149,7 +123,7 @@ class GameAggregateTest {
 
     @Test
     void revealBeforeQuestionShown_isRejected() {
-        fixture.given(readyGame())
+        fixture.given(created())
                 .when(new GameCommand.RevealQuestionCommand(GAME_ID))
                 .expectException(GameExceptions.RoundNotRevealableProblem.class);
     }
@@ -158,7 +132,7 @@ class GameAggregateTest {
     void revealQuestion_appliesQuestionRevealedEvent() {
         Instant shownAt = Instant.now();
 
-        fixture.given(concat(readyGame(), roundStarted(shownAt)))
+        fixture.given(concat(created(), roundStarted(shownAt)))
                 .when(new GameCommand.RevealQuestionCommand(GAME_ID))
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.QuestionRevealedEvent.class,
@@ -167,7 +141,7 @@ class GameAggregateTest {
 
     @Test
     void forfeitEndsGame_andOpponentWins() {
-        fixture.given(readyGame())
+        fixture.given(created())
                 .when(new GameCommand.ForfeitGameCommand(GAME_ID, PLAYER_2))
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameEndedEvent.class,
@@ -179,14 +153,14 @@ class GameAggregateTest {
 
     @Test
     void forfeitByNonPlayer_isRejected() {
-        fixture.given(readyGame())
+        fixture.given(created())
                 .when(new GameCommand.ForfeitGameCommand(GAME_ID, "stranger"))
                 .expectException(GameExceptions.PlayerNotInGameProblem.class);
     }
 
     @Test
     void forfeit_whenNotInProgress_isRejected() {
-        fixture.given(created())
+        fixture.given(finished())
                 .when(new GameCommand.ForfeitGameCommand(GAME_ID, PLAYER_1))
                 .expectException(GameExceptions.GameNotInProgressProblem.class);
     }
@@ -197,7 +171,7 @@ class GameAggregateTest {
         Instant revealedAt = shownAt.plusMillis(GameRules.QUESTION_REVEAL_MS);
         Instant answeredAt = revealedAt.plusSeconds(2);
 
-        fixture.given(concat(readyGame(), roundStarted(shownAt), revealed(revealedAt)))
+        fixture.given(concat(created(), roundStarted(shownAt), revealed(revealedAt)))
                 .when(new GameCommand.AnswerQuestionCommand(
                         GAME_ID, PLAYER_1, GameQuestionChoice.A, answeredAt))
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
@@ -226,24 +200,20 @@ class GameAggregateTest {
                 PLAYER_1_PROGRESS, PLAYER_2_PROGRESS);
     }
 
+    /** La partie naît démarrée : {@code GameCreatedEvent} puis {@code GameStartedEvent}. */
     private Object[] created() {
-        return new Object[]{new GameEvent.GameCreatedEvent(
-                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
-                GamePlayerType.HUMAN, questions(), null,
-                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS, Instant.now())};
+        Instant now = Instant.now();
+        return new Object[]{
+                new GameEvent.GameCreatedEvent(
+                        GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
+                        GamePlayerType.HUMAN, questions(), null,
+                        PLAYER_1_PROGRESS, PLAYER_2_PROGRESS, now),
+                new GameEvent.GameStartedEvent(GAME_ID, now, now.plusMillis(GameRules.MATCH_INTRO_MS))
+        };
     }
 
-    private GameEvent.GameJoinedEvent joined(String playerId) {
-        return new GameEvent.GameJoinedEvent(GAME_ID, playerId, Instant.now());
-    }
-
-    private Object[] readyGame() {
-        return concat(created(), joined(PLAYER_1), joined(PLAYER_2),
-                new GameEvent.GameStartedEvent(GAME_ID, Instant.now(), Instant.now().plusMillis(GameRules.MATCH_INTRO_MS)));
-    }
-
-    private Object[] finishedWithoutPresence() {
-        return concat(readyGame(), ended());
+    private Object[] finished() {
+        return concat(created(), ended());
     }
 
     private GameEvent.GameEndedEvent ended() {

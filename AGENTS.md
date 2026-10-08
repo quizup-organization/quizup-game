@@ -10,11 +10,11 @@
 
 ## 1. Rôle
 
-Gestion des **parties** de quiz à deux joueurs (humain ou bot) : création, présence dans la salle
-d'attente (`join`/`leave`), réponse aux questions, scoring, abandon (`forfeit`), fin (`end`) et
-annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisateur spécial
-(`QuizUpConstants.SYSTEM_USER_ID`). Plus de mode asynchrone/ghost : la partie ne démarre qu'une
-fois les deux joueurs présents.
+Gestion des **parties** de quiz à deux joueurs (humain ou bot) : création, réponse aux questions,
+scoring, abandon (`forfeit`), fin (`end`) et annulation. Les questions proviennent de
+`quizup-theme`. Le bot est un utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie
+démarre immédiatement à la création** (la présence des deux joueurs est garantie en amont par le
+salon / l'appariement de `quizup-matchmaking`) : plus de salle d'attente dans l'agrégat game.
 
 Le `GameCreatedEvent` porte un **snapshot de progression** par joueur (`PlayerProgressSnapshot` :
 niveau + XP totale) fourni à la création : l'écran de résultat affiche la progression **à l'instant
@@ -35,9 +35,7 @@ ses événements. Les handlers de requête/commande, sagas et projections resten
 exposée par le service.
 ## 3. Use cases (ports entrants — `domain/port/in/`)
 
-- `CreateGameUseCase` — création d'une partie
-- `JoinGameUseCase` — entrée dans la salle d'attente (idempotent)
-- `LeaveGameUseCase` — sortie de la salle d'attente avant démarrage (annule la partie)
+- `CreateGameUseCase` — création d'une partie (démarre immédiatement)
 - `ForfeitGameUseCase` — abandon en cours (`ForfeitGameCommand`) : l'adversaire gagne
 - `AnswerQuestionUseCase` — réponse à une question d'un round
 - `CancelGameUseCase` — annulation système (expiration) avant démarrage
@@ -47,8 +45,8 @@ exposée par le service.
 
 **Queries dédiées aux vues BFF** (`GameQuery.java`) :
 
-- `GetCurrentGameQuery(playerId)` → `Game` : partie en attente/en cours la plus récente
-  (`CREATED/READY/IN_PROGRESS`) pour la bannière de reprise ; absence ⇒ `NoCurrentGameProblem` (404).
+- `GetCurrentGameQuery(playerId)` → `Game` : partie en cours la plus récente
+  (`IN_PROGRESS`) pour la bannière de reprise ; absence ⇒ `NoCurrentGameProblem` (404).
 - `GetPlayerGamesQuery(playerId, topicId, opponentId, page, size)` → `PlayerGamesPage` : historique
   d'un joueur (filtres optionnels, plus récents d'abord), sans passer par le search.
 - `GetPopularTopicsQuery(since, limit)` → `List<TopicPopularity>` : thèmes les plus joués
@@ -83,11 +81,7 @@ choisit sa langue, avec repli déterministe FR → EN → premier contenu.
 - **Création** : la partie exige `GameRules.TOTAL_ROUNDS` (7) questions approuvées ; sinon
   `NotEnoughQuestionsProblem` (échec explicite, jamais de partie tronquée).
 - **Expiration** : `GameFlowSaga` planifie `GAME_EXPIRED` (24 h) à la création ; une partie jamais
-  terminée est annulée avant démarrage ou close au score après démarrage. La deadline est annulée à
-  `GameEndedEvent` / `GameCancelledEvent`.
-- **Garde-fou de démarrage** : `START_TIMEOUT` (90 s) annule une partie jamais démarrée
-  (`NO_SHOW_START`) — plus de salle fantôme en attendant l'expiration de 24 h. Annulé à
-  `GameStartedEvent`.
+  terminée est close au score. La deadline est annulée à `GameEndedEvent` / `GameCancelledEvent`.
 - **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
 
 ---

@@ -64,7 +64,7 @@ public class GameProjection {
                         .botDifficulty(event.botDifficulty())
                         .player1Progress(event.player1Progress())
                         .player2Progress(event.player2Progress())
-                        .status(GameStatus.CREATED)
+                        .status(GameStatus.IN_PROGRESS)
                         .player1Score(0)
                         .player2Score(0)
                         .createdAt(event.createdAt())
@@ -73,12 +73,6 @@ public class GameProjection {
         );
 
         logger.info("Game projection created: gameId={}", event.gameId());
-    }
-
-    @EventHandler
-    @Transactional
-    public void on(GameEvent.GameJoinedEvent event) {
-        logger.debug("Projecting GameJoinedEvent: gameId={}, playerId={}", event.gameId(), event.playerId());
     }
 
     @EventHandler

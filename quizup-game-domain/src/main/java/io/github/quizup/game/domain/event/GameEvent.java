@@ -31,24 +31,6 @@ public interface GameEvent {
     ) implements GameEvent {
     }
 
-    record GameJoinedEvent(
-            String gameId,
-            String playerId,
-            Instant joinedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * Un joueur a quitté la salle d'attente avant le démarrage ; la partie est annulée
-     * ({@code GAME_CANCELLED} suit immédiatement).
-     */
-    record GameLeftEvent(
-            String gameId,
-            String playerId,
-            Instant leftAt
-    ) implements GameEvent {
-    }
-
     record GameStartedEvent(
             String gameId,
             Instant startedAt,

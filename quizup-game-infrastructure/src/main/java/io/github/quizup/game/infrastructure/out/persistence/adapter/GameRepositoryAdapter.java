@@ -64,7 +64,7 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
     public Optional<Game> findCurrentGameByPlayerId(String playerId) {
         return gameJpaRepository.findCurrentGamesByPlayerId(
                         playerId,
-                        List.of(GameStatus.CREATED, GameStatus.READY, GameStatus.IN_PROGRESS),
+                        List.of(GameStatus.IN_PROGRESS),
                         Limit.of(1))
                 .stream()
                 .findFirst()

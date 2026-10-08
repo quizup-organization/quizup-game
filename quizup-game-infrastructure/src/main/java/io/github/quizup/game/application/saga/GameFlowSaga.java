@@ -24,9 +24,8 @@ import java.util.Random;
 /**
  * Orchestration du cycle de vie d'une partie :
  * <ul>
- *   <li>la partie est créée par le lobby (les deux joueurs y étaient présents) ;</li>
- *   <li>elle ne démarre qu'une fois les deux joueurs entrés dans l'arène
- *       ({@code GameJoinedEvent}) — le bot est rejoint côté serveur ;</li>
+ *   <li>la partie démarre immédiatement à sa création (présence garantie en amont par le
+ *       salon/l'appariement côté {@code quizup-matchmaking}) ;</li>
  *   <li>les deadlines de phase sont dérivées des instants absolus portés par les événements.</li>
  * </ul>
  *
@@ -60,10 +59,6 @@ public class GameFlowSaga {
 
     @Getter
     @Setter
-    private String startDeadlineId;
-
-    @Getter
-    @Setter
     private String player1Id;
 
     @Getter
@@ -77,10 +72,6 @@ public class GameFlowSaga {
     @Getter
     @Setter
     private BotDifficulty botDifficulty;
-
-    @Getter
-    @Setter
-    private int joinedCount;
 
     @Getter
     @Setter
@@ -130,53 +121,19 @@ public class GameFlowSaga {
         this.player2Id = event.player2Id();
         this.player2Type = event.player2Type();
         this.botDifficulty = BotDifficulty.fromOrDefault(event.botDifficulty());
-        this.joinedCount = 0;
         this.expiredDeadlineId = deadlineManager.schedule(
                 GameDeadline.GAME_EXPIRED_TIMEOUT,
                 GameDeadline.GAME_EXPIRED
         );
-        this.startDeadlineId = deadlineManager.schedule(
-                GameDeadline.START_TIMEOUT_DURATION,
-                GameDeadline.START_TIMEOUT
-        );
-
-        // Seul le bot est rejoint côté serveur : il n'a pas de client pour entrer dans l'arène.
-        if (GamePlayerType.BOT.equals(player2Type)) {
-            commandGateway.send(new GameCommand.JoinGameCommand(gameId, player2Id));
-        }
-    }
-
-    @SagaEventHandler(associationProperty = "gameId")
-    public void on(GameEvent.GameJoinedEvent event) {
-        joinedCount++;
-
-        if (joinedCount == 2) {
-            commandGateway.send(new GameCommand.StartGameCommand(gameId));
-        }
     }
 
     @SagaEventHandler(associationProperty = "gameId")
     public void on(GameEvent.GameStartedEvent event) {
         this.started = true;
-        cancelStartDeadline();
         matchIntroDeadlineId = deadlineManager.schedule(
                 durationUntil(event.firstRoundAt()),
                 GameDeadline.MATCH_INTRO
         );
-    }
-
-    /**
-     * Filet de sécurité : les deux joueurs n'ont pas rejoint l'arène dans la fenêtre — la partie
-     * est annulée (plus de salle fantôme jusqu'à l'expiration de 24 h).
-     */
-    @DeadlineHandler(deadlineName = GameDeadline.START_TIMEOUT)
-    public void onStartTimeout() {
-        if (started) {
-            return;
-        }
-        logger.warn("Partie non démarrée après {}s: gameId={}",
-                GameDeadline.START_TIMEOUT_DURATION.toSeconds(), gameId);
-        commandGateway.send(new GameCommand.CancelGameCommand(gameId, "NO_SHOW_START"));
     }
 
     @DeadlineHandler(deadlineName = GameDeadline.MATCH_INTRO)
@@ -307,14 +264,6 @@ public class GameFlowSaga {
         cancelRoundDeadlines();
         cancelNextRoundDeadline();
         cancelExpiredDeadline();
-        cancelStartDeadline();
-    }
-
-    private void cancelStartDeadline() {
-        if (startDeadlineId != null) {
-            deadlineManager.cancelSchedule(GameDeadline.START_TIMEOUT, startDeadlineId);
-            startDeadlineId = null;
-        }
     }
 
     private void cancelMatchIntroDeadline() {

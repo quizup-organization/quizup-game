@@ -1,6 +1,5 @@
 package io.github.quizup.game.application.saga;
 
-import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import org.axonframework.test.saga.SagaTestFixture;
@@ -10,9 +9,9 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Test in-memory de l'orchestration {@link GameFlowSaga} via {@link SagaTestFixture}.
- * La partie ne démarre qu'une fois les deux joueurs entrés dans l'arène ; seul le bot est
- * rejoint côté serveur (il n'a pas de client).
+ * Test in-memory de l'orchestration {@link GameFlowSaga} via {@link SagaTestFixture}. La partie
+ * démarre immédiatement à la création : la saga n'émet aucune commande à la création (elle
+ * planifie l'expiration), puis l'intro ({@code MATCH_INTRO}) déclenche le premier round.
  */
 class GameFlowSagaTest {
 
@@ -24,29 +23,10 @@ class GameFlowSagaTest {
             new SagaTestFixture<>(GameFlowSaga.class);
 
     @Test
-    void humanGame_doesNotAutoJoinPlayers() {
+    void gameCreated_dispatchesNoCommand() {
         fixture.givenNoPriorActivity()
                 .whenPublishingA(gameCreated(GamePlayerType.HUMAN))
                 .expectNoDispatchedCommands();
-    }
-
-    @Test
-    void botGame_autoJoinsBot() {
-        fixture.givenNoPriorActivity()
-                .whenPublishingA(gameCreated(GamePlayerType.BOT))
-                .expectDispatchedCommands(
-                        new GameCommand.JoinGameCommand(GAME_ID, PLAYER_2)
-                );
-    }
-
-    @Test
-    void bothJoined_startsGame() {
-        fixture.givenAPublished(gameCreated(GamePlayerType.HUMAN))
-                .andThenAPublished(new GameEvent.GameJoinedEvent(GAME_ID, PLAYER_1, Instant.now()))
-                .whenPublishingA(new GameEvent.GameJoinedEvent(GAME_ID, PLAYER_2, Instant.now()))
-                .expectDispatchedCommands(
-                        new GameCommand.StartGameCommand(GAME_ID)
-                );
     }
 
     private static GameEvent.GameCreatedEvent gameCreated(GamePlayerType player2Type) {
