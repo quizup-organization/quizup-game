@@ -4,7 +4,7 @@
 > patterns avancés** : sous-agrégats, sagas, deadlines, event store. Architecture : Axon
 > Framework (CQRS/EDA) + JPA (projections).
 > Pour les règles de patterns : [
-`../../best-practices/.backend/hexagonal-architecture.md`](../../best-practices/.backend/hexagonal-architecture.md).
+`../../best-practices/.backend/folder-structure.md`](../../best-practices/.backend/folder-structure.md).
 
 ---
 
