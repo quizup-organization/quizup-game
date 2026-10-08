@@ -5,7 +5,6 @@ import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.*;
 import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
-import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.apache.commons.lang3.StringUtils;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -19,7 +18,6 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
@@ -42,11 +40,6 @@ public class GameAggregate {
     private final Map<GamePlayer, GamePlayerAggregate> players = new EnumMap<>(GamePlayer.class);
     private final Map<GameRoundType, GameRoundAggregate> rounds = new EnumMap<>(GameRoundType.class);
     private GameRoundType currentRound;
-
-    private String rematchRequesterId;
-    private boolean rematchAccepted;
-    private Set<Language> rematchLanguages;
-    private String rematchNewGameId;
 
     protected GameAggregate() {
     }
@@ -93,15 +86,17 @@ public class GameAggregate {
                         command.player2Type(),
                         questions,
                         command.botDifficulty(),
+                        command.player1Progress(),
+                        command.player2Progress(),
                         Instant.now()
                 )
         );
     }
 
     /**
-     * Un joueur confirme sa présence : dans la salle d'attente (avant démarrage) ou sur l'écran
-     * de résultat (après la fin de la partie). Idempotent : un joueur déjà présent ne fait rien.
-     * Quand les deux joueurs sont présents avant démarrage → statut {@code READY}.
+     * Un joueur confirme sa présence dans la salle d'attente (avant démarrage). Idempotent : un
+     * joueur déjà présent ne fait rien. Quand les deux joueurs sont présents → statut
+     * {@code READY}.
      */
     @CommandHandler
     public void handle(GameCommand.JoinGameCommand command) {
@@ -113,7 +108,7 @@ public class GameAggregate {
             logger.debug("Player already present, ignoring join: gameId={}, playerId={}", gameId, command.playerId());
             return;
         }
-        if (status == GameStatus.CREATED || status == GameStatus.FINISHED) {
+        if (status == GameStatus.CREATED) {
             apply(new GameEvent.GameJoinedEvent(gameId, command.playerId(), Instant.now()));
             return;
         }
@@ -122,36 +117,20 @@ public class GameAggregate {
     }
 
     /**
-     * Un joueur quitte la partie : avant démarrage la partie est annulée ; après la fin de la
-     * partie, seule la présence d'écran de résultat est libérée (et une éventuelle demande de
-     * revanche en attente est annulée).
+     * Un joueur quitte la partie avant démarrage : la partie est annulée.
      */
     @CommandHandler
     public void handle(GameCommand.LeaveGameCommand command) {
         logger.info("Leaving game: gameId={}, playerId={}", gameId, command.playerId());
 
-        if (status == GameStatus.CANCELED) {
+        if (status == GameStatus.CANCELED || status == GameStatus.FINISHED) {
             return;
         }
         if (status == GameStatus.IN_PROGRESS) {
             throw new GameExceptions.GameAlreadyStartedProblem(gameId, status.name());
         }
 
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-
         Instant now = Instant.now();
-
-        if (status == GameStatus.FINISHED) {
-            if (!player.isPresent()) {
-                return;
-            }
-            if (rematchPending()) {
-                apply(new GameEvent.RematchCancelledEvent(gameId, "PLAYER_LEFT", now));
-            }
-            apply(new GameEvent.GameLeftEvent(gameId, command.playerId(), now));
-            return;
-        }
-
         apply(new GameEvent.GameLeftEvent(gameId, command.playerId(), now));
         apply(new GameEvent.GameCancelledEvent(gameId, "PLAYER_LEFT", now));
     }
@@ -339,151 +318,6 @@ public class GameAggregate {
         );
     }
 
-    /**
-     * Un joueur demande une revanche après la fin de la partie. Si une demande est déjà en
-     * attente, le demandeur est ignoré (idempotent) et l'adversaire vaut acceptation
-     * (double-clic simultané). Seuls les duels humains avec les deux joueurs présents sur
-     * l'écran de résultat peuvent se rejouer.
-     */
-    @CommandHandler
-    public void handle(GameCommand.RequestRematchCommand command) {
-        logger.info("Requesting rematch: gameId={}, playerId={}", gameId, command.playerId());
-
-        requireFinished();
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-        requireHumanOpponent();
-        requireBothPlayersPresent();
-
-        if (command.languages() == null || command.languages().isEmpty()) {
-            throw new GameExceptions.MissingLanguagesProblem(gameId);
-        }
-
-        Instant now = Instant.now();
-
-        if (rematchPending()) {
-            if (player.getPlayerId().equals(rematchRequesterId)) {
-                logger.debug("Rematch already requested, ignoring: gameId={}, playerId={}",
-                        gameId, command.playerId());
-                return;
-            }
-            if (rematchAccepted) {
-                return;
-            }
-            apply(new GameEvent.RematchAcceptedEvent(gameId, command.playerId(), now));
-            return;
-        }
-
-        GamePlayerAggregate opponent = opponentOf(player);
-        apply(
-                new GameEvent.RematchRequestedEvent(
-                        gameId,
-                        player.getPlayerId(),
-                        player.getPlayerName(),
-                        opponent.getPlayerId(),
-                        opponent.getPlayerName(),
-                        topicId,
-                        command.languages(),
-                        now
-                )
-        );
-    }
-
-    /**
-     * L'adversaire accepte la demande de revanche en attente. Le demandeur ne peut pas
-     * accepter sa propre demande.
-     */
-    @CommandHandler
-    public void handle(GameCommand.AcceptRematchCommand command) {
-        logger.info("Accepting rematch: gameId={}, playerId={}", gameId, command.playerId());
-
-        requireFinished();
-        requireRematchPending();
-
-        if (rematchAccepted) {
-            return;
-        }
-
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-
-        if (player.getPlayerId().equals(rematchRequesterId)) {
-            logger.debug("Requester cannot accept own rematch request: gameId={}, playerId={}",
-                    gameId, command.playerId());
-            return;
-        }
-
-        requireBothPlayersPresent();
-        apply(new GameEvent.RematchAcceptedEvent(gameId, command.playerId(), Instant.now()));
-    }
-
-    /**
-     * L'adversaire décline la demande de revanche en attente.
-     */
-    @CommandHandler
-    public void handle(GameCommand.DeclineRematchCommand command) {
-        logger.info("Declining rematch: gameId={}, playerId={}", gameId, command.playerId());
-
-        requireFinished();
-        requireRematchPending();
-
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-
-        if (player.getPlayerId().equals(rematchRequesterId)) {
-            logger.debug("Requester cannot decline own rematch request: gameId={}, playerId={}",
-                    gameId, command.playerId());
-            return;
-        }
-
-        apply(new GameEvent.RematchDeclinedEvent(gameId, command.playerId(), Instant.now()));
-    }
-
-    /**
-     * Le demandeur annule sa demande de revanche en attente.
-     */
-    @CommandHandler
-    public void handle(GameCommand.CancelRematchCommand command) {
-        logger.info("Canceling rematch: gameId={}, playerId={}", gameId, command.playerId());
-
-        requireRematchPending();
-
-        GamePlayerAggregate player = resolvePlayer(command.playerId());
-
-        if (!player.getPlayerId().equals(rematchRequesterId)) {
-            throw new GameExceptions.NotRematchRequesterProblem(gameId, command.playerId());
-        }
-
-        apply(new GameEvent.RematchCancelledEvent(gameId, "PLAYER_CANCELLED", Instant.now()));
-    }
-
-    /**
-     * La saga confirme la création de la nouvelle partie : l'état de revanche est clos.
-     */
-    @CommandHandler
-    public void handle(GameCommand.ConfirmRematchCommand command) {
-        logger.info("Confirming rematch: gameId={}, newGameId={}", gameId, command.newGameId());
-
-        requireRematchPending();
-
-        if (!rematchAccepted) {
-            throw new GameExceptions.RematchNotAcceptedProblem(gameId);
-        }
-
-        apply(new GameEvent.RematchStartedEvent(gameId, command.newGameId(), Instant.now()));
-    }
-
-    /**
-     * La saga avorte la revanche en attente (échec de création ou expiration) — idempotent.
-     */
-    @CommandHandler
-    public void handle(GameCommand.AbortRematchCommand command) {
-        logger.info("Aborting rematch: gameId={}, reason={}", gameId, command.reason());
-
-        if (!rematchPending()) {
-            return;
-        }
-
-        apply(new GameEvent.RematchCancelledEvent(gameId, command.reason(), Instant.now()));
-    }
-
     // =============================================
     // EVENT SOURCING HANDLERS
     // =============================================
@@ -572,35 +406,6 @@ public class GameAggregate {
         this.status = GameStatus.FINISHED;
         getPlayer(GamePlayer.PLAYER_1).leave();
         getPlayer(GamePlayer.PLAYER_2).leave();
-        clearRematch();
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.RematchRequestedEvent event) {
-        this.rematchRequesterId = event.requesterId();
-        this.rematchLanguages = event.languages();
-        this.rematchAccepted = false;
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.RematchAcceptedEvent event) {
-        this.rematchAccepted = true;
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.RematchDeclinedEvent event) {
-        clearRematch();
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.RematchCancelledEvent event) {
-        clearRematch();
-    }
-
-    @EventSourcingHandler
-    public void on(GameEvent.RematchStartedEvent event) {
-        clearRematch();
-        this.rematchNewGameId = event.newGameId();
     }
 
     // =============================================
@@ -631,40 +436,6 @@ public class GameAggregate {
 
     private boolean bothPlayersPresent() {
         return getPlayer(GamePlayer.PLAYER_1).isPresent() && getPlayer(GamePlayer.PLAYER_2).isPresent();
-    }
-
-    private boolean rematchPending() {
-        return rematchRequesterId != null;
-    }
-
-    private void clearRematch() {
-        this.rematchRequesterId = null;
-        this.rematchAccepted = false;
-        this.rematchLanguages = null;
-    }
-
-    private void requireFinished() {
-        if (status != GameStatus.FINISHED) {
-            throw new GameExceptions.GameNotFinishedProblem(gameId, status == null ? "UNKNOWN" : status.name());
-        }
-    }
-
-    private void requireRematchPending() {
-        if (!rematchPending()) {
-            throw new GameExceptions.RematchNotRequestedProblem(gameId);
-        }
-    }
-
-    private void requireHumanOpponent() {
-        if (!GamePlayerType.HUMAN.equals(getPlayer(GamePlayer.PLAYER_2).getPlayerType())) {
-            throw new GameExceptions.BotRematchNotAllowedProblem(gameId);
-        }
-    }
-
-    private void requireBothPlayersPresent() {
-        if (!bothPlayersPresent()) {
-            throw new GameExceptions.RematchPlayersNotPresentProblem(gameId);
-        }
     }
 
     private String resolveWinnerByScore() {

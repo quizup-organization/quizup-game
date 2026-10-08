@@ -62,6 +62,8 @@ public class GameProjection {
                         .player2Name(event.player2Name())
                         .opponent(event.player2Type())
                         .botDifficulty(event.botDifficulty())
+                        .player1Progress(event.player1Progress())
+                        .player2Progress(event.player2Progress())
                         .status(GameStatus.CREATED)
                         .player1Score(0)
                         .player2Score(0)

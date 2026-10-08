@@ -69,7 +69,7 @@ class GameQueryHandlerTest {
         GameResult expected = new GameResult(
                 "game-1", "topic-1", "player-1", "Alpha", "player-2", "Bravo",
                 "player-1", "player-2", 48, 10, "player-1", false,
-                30, 26, 2, 2, 3, 3);
+                30, 26, 2, 2, 3, 3, 0, 0, 0, 0);
         assertEquals(expected, result);
     }
 

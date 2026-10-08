@@ -15,6 +15,8 @@ public record Game(
         String player2Name,
         GamePlayerType opponent,
         BotDifficulty botDifficulty,
+        PlayerProgressSnapshot player1Progress,
+        PlayerProgressSnapshot player2Progress,
         GameStatus status,
         int player1Score,
         int player2Score,

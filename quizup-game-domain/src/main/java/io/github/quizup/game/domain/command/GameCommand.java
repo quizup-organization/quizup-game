@@ -3,6 +3,7 @@ package io.github.quizup.game.domain.command;
 import io.github.quizup.game.domain.model.BotDifficulty;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
+import io.github.quizup.game.domain.model.PlayerProgressSnapshot;
 import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
@@ -18,6 +19,9 @@ public interface GameCommand {
      * {@code player2Type = BOT}. {@code languages} = langues requises (union des langues des
      * joueurs) : seules les questions disponibles dans **toutes** ces langues sont tirées
      * (sélection stricte).
+     *
+     * <p>{@code player1Progress}/{@code player2Progress} figent la progression des joueurs à la
+     * création : l'écran de résultat l'affiche au lieu de la progression courante du compte.</p>
      */
     record CreateGameCommand(
             @TargetAggregateIdentifier String gameId,
@@ -28,7 +32,9 @@ public interface GameCommand {
             String player2Name,
             Set<Language> languages,
             GamePlayerType player2Type,
-            BotDifficulty botDifficulty
+            BotDifficulty botDifficulty,
+            PlayerProgressSnapshot player1Progress,
+            PlayerProgressSnapshot player2Progress
     ) implements GameCommand {
     }
 
@@ -110,64 +116,6 @@ public interface GameCommand {
 
     record CloseRoundCommand(
             @TargetAggregateIdentifier String gameId
-    ) implements GameCommand {
-    }
-
-    /**
-     * Un joueur demande une revanche après la fin de la partie. Si l'adversaire avait déjà
-     * demandé, cette commande vaut acceptation (double-clic simultané). {@code languages} =
-     * langues requises pour la nouvelle partie (non vide).
-     */
-    record RequestRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId,
-            Set<Language> languages
-    ) implements GameCommand {
-    }
-
-    /**
-     * L'adversaire accepte la demande de revanche en attente.
-     */
-    record AcceptRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId
-    ) implements GameCommand {
-    }
-
-    /**
-     * L'adversaire décline la demande de revanche en attente.
-     */
-    record DeclineRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId
-    ) implements GameCommand {
-    }
-
-    /**
-     * Le demandeur annule sa demande de revanche en attente. Seul le demandeur peut l'annuler.
-     */
-    record CancelRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String playerId
-    ) implements GameCommand {
-    }
-
-    /**
-     * La saga confirme que la nouvelle partie a bien été créée : l'état de revanche est clos sur
-     * l'ancienne partie.
-     */
-    record ConfirmRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String newGameId
-    ) implements GameCommand {
-    }
-
-    /**
-     * La saga avorte la revanche en attente (échec de création ou expiration).
-     */
-    record AbortRematchCommand(
-            @TargetAggregateIdentifier String gameId,
-            String reason
     ) implements GameCommand {
     }
 }

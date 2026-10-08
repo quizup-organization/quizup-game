@@ -36,13 +36,6 @@ public interface GameDeadline {
     String ROUND_EXPIRED = "round-expired";
     Duration ROUND_EXPIRED_TIMEOUT = Duration.ofSeconds(ROUND_TIMEOUT_SECONDS);
 
-    /**
-     * Fenêtre laissée aux joueurs pour confirmer la revanche après la fin de la partie ;
-     * à l'échéance, la demande en attente est annulée ({@code EXPIRED}).
-     */
-    String REMATCH_EXPIRY = "rematch-expiry";
-    Duration REMATCH_EXPIRY_DURATION = Duration.ofSeconds(60);
-
     /** Transition vers le premier round (écran VS + intro) — durée portée par {@code firstRoundAt}. */
     String MATCH_INTRO = "match-intro";
 

@@ -26,7 +26,11 @@ public record GameResult(
         int correctAnswers,
         int fastAnswers,
         int answeredRounds,
-        int totalRounds
+        int totalRounds,
+        int myLevel,
+        int myXpTotal,
+        int opponentLevel,
+        int opponentXpTotal
 ) {
 
     /**
@@ -72,6 +76,9 @@ public record GameResult(
             }
         }
 
+        PlayerProgressSnapshot myProgress = isPlayer1 ? game.player1Progress() : game.player2Progress();
+        PlayerProgressSnapshot opponentProgress = isPlayer1 ? game.player2Progress() : game.player1Progress();
+
         return new GameResult(
                 game.gameId(),
                 game.topicId(),
@@ -90,7 +97,11 @@ public record GameResult(
                 correctAnswers,
                 fastAnswers,
                 answeredRounds,
-                game.rounds().size()
+                game.rounds().size(),
+                myProgress == null ? 0 : myProgress.level(),
+                myProgress == null ? 0 : myProgress.xpTotal(),
+                opponentProgress == null ? 0 : opponentProgress.level(),
+                opponentProgress == null ? 0 : opponentProgress.xpTotal()
         );
     }
 }

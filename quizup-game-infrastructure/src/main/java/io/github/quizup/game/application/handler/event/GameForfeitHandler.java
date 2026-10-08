@@ -12,9 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Forfait sur déconnexion : lorsqu'un joueur passe hors ligne (présence, service profile),
- * son duel synchrone humain en cours est clôturé à son détriment — l'adversaire gagne. Sa
- * présence sur l'écran de résultat de sa dernière partie terminée est également libérée afin
- * qu'une revanche en attente soit annulée ({@code PLAYER_LEFT}).
+ * son duel synchrone humain en cours est clôturé à son détriment — l'adversaire gagne.
  *
  * <p>Les duels contre bot sont ignorés : {@code findActiveGameByPlayerId} ne remonte que les
  * parties en cours opposant deux humains.
@@ -40,13 +38,6 @@ public class GameForfeitHandler {
                     logger.info("Forfeiting game {}: player {} went offline",
                             game.gameId(), event.userId());
                     commandGateway.send(new GameCommand.ForfeitGameCommand(game.gameId(), event.userId()));
-                });
-
-        gameRepositoryPort.findLatestFinishedGameByPlayerId(event.userId())
-                .ifPresent(game -> {
-                    logger.debug("Releasing result-screen presence of game {}: player {} went offline",
-                            game.gameId(), event.userId());
-                    commandGateway.send(new GameCommand.LeaveGameCommand(game.gameId(), event.userId()));
                 });
     }
 }

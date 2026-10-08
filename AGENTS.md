@@ -16,12 +16,12 @@ annulation. Les questions proviennent de `quizup-theme`. Le bot est un utilisate
 (`QuizUpConstants.SYSTEM_USER_ID`). Plus de mode asynchrone/ghost : la partie ne démarre qu'une
 fois les deux joueurs présents.
 
-La **présence** est également suivie sur l'**écran de résultat** : `GameEndedEvent` remet les deux
-joueurs absents, `join`/`leave` restent acceptés en `FINISHED` (présence seule, sans rejouer le
-statut), et une déconnexion (`PlayerWentOfflineEvent`) sort le joueur de la dernière partie terminée.
-Ce socle alimente la **revanche** (`RequestRematch/AcceptRematch/DeclineRematch/CancelRematch`) :
-demande possible seulement si les deux joueurs sont présents et humains ; l'acceptation crée une
-nouvelle partie via `RematchSaga` (mêmes joueurs/topic/langues), avec deadline d'expiration de 60 s.
+Le `GameCreatedEvent` porte un **snapshot de progression** par joueur (`PlayerProgressSnapshot` :
+niveau + XP totale) fourni à la création : l'écran de résultat affiche la progression **à l'instant
+de la partie** (le bot reçoit un niveau d'affichage dérivé de sa difficulté).
+
+Ce service ne possède **pas** la revanche : rejouer un adversaire passe par un **défi nominatif**
+(`quizup-matchmaking`, `POST /api/challenges`) → salle → partie.
 
 **Package** : `io.github.quizup.game`
 
@@ -89,10 +89,6 @@ choisit sa langue, avec repli déterministe FR → EN → premier contenu.
   (`NO_SHOW_START`) — plus de salle fantôme en attendant l'expiration de 24 h. Annulé à
   `GameStartedEvent`.
 - **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
-- **Revanche** : `REMATCH_EXPIRY` (60 s) — sans acceptation, la demande est annulée
-  (`RematchCancelledEvent("EXPIRED")`) ; un départ de l'écran de résultat annule aussi la demande
-  (`PLAYER_LEFT`). `RematchSaga` crée la partie à l'acceptation puis `ConfirmRematchCommand`
-  publie `RematchStartedEvent(newGameId)` (échec de création ⇒ `CREATE_FAILED`).
 
 ---
 

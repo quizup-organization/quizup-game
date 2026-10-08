@@ -1,6 +1,7 @@
 package io.github.quizup.game.infrastructure.out.persistence.mapper;
 
 import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.PlayerProgressSnapshot;
 import io.github.quizup.game.infrastructure.out.persistence.entity.GameEntity;
 
 import java.util.List;
@@ -21,6 +22,8 @@ public final class GameEntityMapper {
                 .player2Name(entity.getPlayer2Name())
                 .opponent(entity.getOpponent())
                 .botDifficulty(entity.getBotDifficulty())
+                .player1Progress(progress(entity.getPlayer1Level(), entity.getPlayer1XpTotal()))
+                .player2Progress(progress(entity.getPlayer2Level(), entity.getPlayer2XpTotal()))
                 .status(entity.getStatus())
                 .player1Score(entity.getPlayer1Score())
                 .player2Score(entity.getPlayer2Score())
@@ -42,6 +45,10 @@ public final class GameEntityMapper {
         entity.setPlayer2Name(game.player2Name());
         entity.setOpponent(game.opponent());
         entity.setBotDifficulty(game.botDifficulty());
+        entity.setPlayer1Level(level(game.player1Progress()));
+        entity.setPlayer1XpTotal(xpTotal(game.player1Progress()));
+        entity.setPlayer2Level(level(game.player2Progress()));
+        entity.setPlayer2XpTotal(xpTotal(game.player2Progress()));
         entity.setStatus(game.status());
         entity.setPlayer1Score(game.player1Score());
         entity.setPlayer2Score(game.player2Score());
@@ -53,6 +60,21 @@ public final class GameEntityMapper {
                 GameRoundEntityMapper.toEntity(round, entity)
         ));
         return entity;
+    }
+
+    private static PlayerProgressSnapshot progress(Integer level, Integer xpTotal) {
+        if (level == null) {
+            return null;
+        }
+        return new PlayerProgressSnapshot(level, xpTotal == null ? 0 : xpTotal);
+    }
+
+    private static Integer level(PlayerProgressSnapshot progress) {
+        return progress == null ? null : progress.level();
+    }
+
+    private static Integer xpTotal(PlayerProgressSnapshot progress) {
+        return progress == null ? null : progress.xpTotal();
     }
 }
 

@@ -1,11 +1,9 @@
 package io.github.quizup.game.domain.event;
 
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.microservice.core.domain.model.i18n.Language;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Événements du domaine Game.
@@ -27,6 +25,8 @@ public interface GameEvent {
             GamePlayerType player2Type,
             List<GameQuestion> questions,
             BotDifficulty botDifficulty,
+            PlayerProgressSnapshot player1Progress,
+            PlayerProgressSnapshot player2Progress,
             Instant createdAt
     ) implements GameEvent {
     }
@@ -142,63 +142,6 @@ public interface GameEvent {
             int player2CorrectAnswers,
             int player2FastAnswers,
             Instant endedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * Un joueur a demandé une revanche après la fin de la partie ; la demande expire à
-     * l'échéance {@link GameDeadline#REMATCH_EXPIRY} orchestrée par la saga.
-     */
-    record RematchRequestedEvent(
-            String gameId,
-            String requesterId,
-            String requesterName,
-            String opponentId,
-            String opponentName,
-            String topicId,
-            Set<Language> languages,
-            Instant requestedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * L'adversaire a accepté la revanche en attente : la saga crée la nouvelle partie.
-     */
-    record RematchAcceptedEvent(
-            String gameId,
-            String playerId,
-            Instant acceptedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * L'adversaire a décliné la revanche en attente : la demande est close.
-     */
-    record RematchDeclinedEvent(
-            String gameId,
-            String playerId,
-            Instant declinedAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * La revanche en attente est annulée (annulation par le demandeur, sortie d'un joueur,
-     * échec de création ou expiration).
-     */
-    record RematchCancelledEvent(
-            String gameId,
-            String reason,
-            Instant cancelledAt
-    ) implements GameEvent {
-    }
-
-    /**
-     * La nouvelle partie de la revanche est créée ; {@code newGameId} porte son identifiant.
-     */
-    record RematchStartedEvent(
-            String gameId,
-            String newGameId,
-            Instant startedAt
     ) implements GameEvent {
     }
 }

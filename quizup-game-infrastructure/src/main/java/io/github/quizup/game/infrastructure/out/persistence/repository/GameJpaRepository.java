@@ -42,16 +42,6 @@ public interface GameJpaRepository extends JpaRepository<GameEntity, String>, Jp
     @Query("""
             select g from GameEntity g
             where (g.player1Id = :playerId or g.player2Id = :playerId)
-              and g.status = :status
-            order by g.endedAt desc
-            """)
-    List<GameEntity> findLatestFinishedGamesByPlayerId(@Param("playerId") String playerId,
-                                                       @Param("status") GameStatus status,
-                                                       Limit limit);
-
-    @Query("""
-            select g from GameEntity g
-            where (g.player1Id = :playerId or g.player2Id = :playerId)
               and (:topicId is null or g.topicId = :topicId)
               and (:opponentId is null or g.player1Id = :opponentId or g.player2Id = :opponentId)
             order by g.createdAt desc

@@ -60,6 +60,8 @@ class GameFlowSagaTest {
                 player2Type,
                 List.of(),
                 null,
+                null,
+                null,
                 Instant.now()
         );
     }
