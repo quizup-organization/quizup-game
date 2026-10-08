@@ -1,3 +1,13 @@
+## [6.0.0](https://github.com/quizup-organization/quizup-game/compare/v5.2.0...v6.0.0) (2026-10-08)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** le rematch est retire de l'agregat game (la revanche passe par un defi nominatif), la presence FINISHED (join/leave d'ecran de resultat) est supprimee, et CreateGameCommand/GameCreatedEvent/GameResult sont etendus (reset prod requis).
+
+### Features
+
+* **game:** snapshot de progression dans l'agregat game et retrait du rematch ([ef61916](https://github.com/quizup-organization/quizup-game/commit/ef619160db49fbfa56d01c8dad97c8334ca9ab03))
+
 ## [5.2.0](https://github.com/quizup-organization/quizup-game/compare/v5.1.1...v5.2.0) (2026-10-05)
 
 ### Features
