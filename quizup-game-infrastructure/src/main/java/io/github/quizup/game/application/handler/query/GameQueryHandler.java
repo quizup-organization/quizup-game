@@ -80,4 +80,11 @@ public class GameQueryHandler {
                 .map(game -> GameResult.from(game, query.playerId()))
                 .orElseThrow(() -> new GameExceptions.GameNotFoundProblem(query.gameId()));
     }
+
+    @QueryHandler
+    public int handle(GameQuery.GetTopicCompletionQuery query) {
+        logger.debug("Handling GetTopicCompletionQuery: playerId={}, topicId={}",
+                query.playerId(), query.topicId());
+        return gameRepositoryPort.countAnsweredQuestions(query.playerId(), query.topicId());
+    }
 }

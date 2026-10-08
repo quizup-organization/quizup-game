@@ -45,4 +45,11 @@ public interface GameQuery {
      */
     record GetGameResultQuery(String gameId, String playerId) implements GameQuery {
     }
+
+    /**
+     * Nombre de questions <b>distinctes</b> répondues par un joueur sur un thème (barre
+     * « questions complétées » de la fiche sujet). Réponses effectives uniquement (timeouts exclus).
+     */
+    record GetTopicCompletionQuery(String playerId, String topicId) implements GameQuery {
+    }
 }

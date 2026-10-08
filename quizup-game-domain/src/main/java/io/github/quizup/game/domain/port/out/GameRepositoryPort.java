@@ -40,4 +40,10 @@ public interface GameRepositoryPort {
      * Thèmes les plus joués (parties créées) depuis {@code since}, ordre décroissant.
      */
     List<TopicPopularity> findPopularTopics(Instant since, int limit);
+
+    /**
+     * Nombre de questions <b>distinctes</b> auxquelles le joueur a effectivement répondu sur un
+     * thème (timeouts exclus) — progression « questions complétées » d'une fiche sujet.
+     */
+    int countAnsweredQuestions(String playerId, String topicId);
 }

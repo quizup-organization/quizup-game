@@ -59,4 +59,19 @@ public interface GameJpaRepository extends JpaRepository<GameEntity, String>, Jp
             order by count(g) desc, g.topicId asc
             """)
     List<Object[]> findPopularTopics(@Param("since") Instant since, Limit limit);
+
+    /**
+     * Questions distinctes effectivement répondues par un joueur sur un thème (timeouts exclus) :
+     * la clé {@code question_id} est dédupliquée entre les manches et les parties.
+     */
+    @Query("""
+            select count(distinct r.questionId)
+            from GameEntity g join g.rounds r
+            where g.topicId = :topicId
+              and (
+                (g.player1Id = :playerId and r.player1Choice is not null)
+                or (g.player2Id = :playerId and r.player2Choice is not null)
+              )
+            """)
+    long countAnsweredQuestions(@Param("playerId") String playerId, @Param("topicId") String topicId);
 }

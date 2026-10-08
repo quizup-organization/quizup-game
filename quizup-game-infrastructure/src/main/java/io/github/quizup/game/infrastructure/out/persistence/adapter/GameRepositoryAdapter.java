@@ -99,4 +99,10 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
                 .map(row -> new TopicPopularity((String) row[0], ((Number) row[1]).longValue()))
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int countAnsweredQuestions(String playerId, String topicId) {
+        return (int) gameJpaRepository.countAnsweredQuestions(playerId, topicId);
+    }
 }
