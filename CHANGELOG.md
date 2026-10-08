@@ -1,3 +1,13 @@
+## [7.0.0](https://github.com/quizup-organization/quizup-game/compare/v6.1.0...v7.0.0) (2026-10-08)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** statuts CREATED/READY, commandes join/leave/start et evenements GameJoined/GameLeft supprimes (reset prod requis).
+
+### Features
+
+* **game:** suppression de la salle d'attente (partie demarree a la creation) ([a69f1d5](https://github.com/quizup-organization/quizup-game/commit/a69f1d5004166d0a4446486d21c5017e5c0ddb80))
+
 ## [6.1.0](https://github.com/quizup-organization/quizup-game/compare/v6.0.1...v6.1.0) (2026-10-08)
 
 ### Features
