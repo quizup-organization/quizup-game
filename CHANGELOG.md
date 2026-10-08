@@ -1,3 +1,9 @@
+## [6.0.1](https://github.com/quizup-organization/quizup-game/compare/v6.0.0...v6.0.1) (2026-10-08)
+
+### Bug Fixes
+
+* **game:** pinne quizup-theme-domain 4.6.0 (4.1.0 purge par prune-packages) ([c2fed7e](https://github.com/quizup-organization/quizup-game/commit/c2fed7e5a305b4198d1b4ebdfd86765cf6c7135f))
+
 ## [6.0.0](https://github.com/quizup-organization/quizup-game/compare/v5.2.0...v6.0.0) (2026-10-08)
 
 ### ⚠ BREAKING CHANGES
