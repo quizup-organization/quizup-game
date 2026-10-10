@@ -1,3 +1,14 @@
+## [8.0.0](https://github.com/quizup-organization/quizup-game/compare/v7.0.0...v8.0.0) (2026-10-10)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** CreateGameCommand change de contrat (questions au lieu de
+languages) et les queries/ports de lecture évoluent.
+
+### Features
+
+* **game:** questions portées par la commande, agrégat sans I/O ([6da106e](https://github.com/quizup-organization/quizup-game/commit/6da106ede7a1ff5450b5cf8ffbd2ae72a7872332))
+
 ## [7.0.0](https://github.com/quizup-organization/quizup-game/compare/v6.1.0...v7.0.0) (2026-10-08)
 
 ### ⚠ BREAKING CHANGES
