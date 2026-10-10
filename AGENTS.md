@@ -11,10 +11,13 @@
 ## 1. Rôle
 
 Gestion des **parties** de quiz à deux joueurs (humain ou bot) : création, réponse aux questions,
-scoring, abandon (`forfeit`), fin (`end`) et annulation. Les questions proviennent de
-`quizup-theme`. Le bot est un utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie
-démarre immédiatement à la création** (la présence des deux joueurs est garantie en amont par le
-salon / l'appariement de `quizup-matchmaking`) : plus de salle d'attente dans l'agrégat game.
+scoring, abandon (`forfeit`), fin (`end`) et annulation. Les **questions** proviennent de
+`quizup-theme` mais sont **préparées par l'appelant** (salle, appariement ou façade) et portées par
+`CreateGameCommand` : l'agrégat game ne fait **aucun I/O** (voir
+[`command-preparation.md`](../../best-practices/.backend/command-preparation.md)). Le bot est un
+utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie démarre immédiatement à la
+création** (la présence des deux joueurs est garantie en amont par la salle / l'appariement de
+`quizup-matchmaking`) : plus de salle d'attente dans l'agrégat game.
 
 Le `GameCreatedEvent` porte un **snapshot de progression** par joueur (`PlayerProgressSnapshot` :
 niveau + XP totale) fourni à la création : l'écran de résultat affiche la progression **à l'instant
@@ -33,20 +36,22 @@ Service **headless** : aucun contrôleur REST ni WebSocket. La surface applicati
 **`quizup-bff`** (`/api/**` + `/ws`) ; il interroge ce service via le **query bus** Axon et consomme
 ses événements. Les handlers de requête/commande, sagas et projections restent la seule surface
 exposée par le service.
-## 3. Use cases (ports entrants — `domain/port/in/`)
+## 3. Commandes / queries (bus)
 
-- `CreateGameUseCase` — création d'une partie (démarre immédiatement)
-- `ForfeitGameUseCase` — abandon en cours (`ForfeitGameCommand`) : l'adversaire gagne
-- `AnswerQuestionUseCase` — réponse à une question d'un round
-- `CancelGameUseCase` — annulation système (expiration) avant démarrage
-- `GetGameUseCase` — récupération par id
-- `GetGameEventsUseCase` — lecture des événements (event store)
-- `SearchGameUseCase` — recherche paginée (`POST /search`, réservée aux futures surfaces d'administration)
+Commandes :
+
+- `CreateGameCommand` — création d'une partie (démarre immédiatement) ; porte les `GameQuestion`
+  préparées par l'appelant.
+- `ForfeitGameCommand` — abandon en cours (`ForfeitGameCommand`) : l'adversaire gagne.
+- `AnswerQuestionCommand` — réponse à une question d'un round.
+- `CancelGameCommand` — annulation système (expiration) avant démarrage.
+- `StartRoundCommand`, `RevealQuestionCommand`, `CloseRoundCommand`, `EndGameCommand` — orchestration
+  de rounds par `GameFlowSaga`.
 
 **Queries dédiées aux vues BFF** (`GameQuery.java`) :
 
-- `GetCurrentGameQuery(playerId)` → `Game` : partie en cours la plus récente
-  (`IN_PROGRESS`) pour la bannière de reprise ; absence ⇒ `NoCurrentGameProblem` (404).
+- `GetActiveGamesQuery(playerId)` → `List<Game>` : parties en cours (`IN_PROGRESS`, humain ou bot),
+  plus récentes d'abord, pour la bannière de reprise ; collection vide si aucune — **jamais de 404**.
 - `GetPlayerGamesQuery(playerId, topicId, opponentId, page, size)` → `PlayerGamesPage` : historique
   d'un joueur (filtres optionnels, plus récents d'abord), sans passer par le search.
 - `GetPopularTopicsQuery(since, limit)` → `List<TopicPopularity>` : thèmes les plus joués
@@ -55,24 +60,21 @@ exposée par le service.
   **typé** via `eventType` (codec du query bus distribué). Le mapping vers les notifications web
   (`GameNotification`, annotations Jackson) est fait par le **BFF**, pas par ce service.
 - `GetGameResultQuery(gameId, playerId)` → `GameResult` : composition de fin de duel pour l'écran de
-  résultat (scores, vainqueur, `botGame`, `basePoints`, `speedBonus`, `correctAnswers`, `fastAnswers`,
-  `answeredRounds`/`totalRounds`) — les règles de scoring restent dans le domaine (`GameRules`).
+  résultat (scores, vainqueur, `botGame`, `botDifficulty`, sujet/adversaire, `basePoints`,
+  `speedBonus`, `correctAnswers`, `fastAnswers`, `answeredRounds`/`totalRounds`) — les règles de
+  scoring restent dans le domaine (`GameRules`).
 
 ---
 
 ## 4. Dépendances inter-services
 
-| Port out                 | Service cible  | Query Axon envoyée (QueryGateway)               |
-|--------------------------|----------------|-------------------------------------------------|
-| `QuestionRepositoryPort` | `quizup-theme` | `QuestionQuery.GetRandomApprovedQuestionsQuery` |
-
-Implémentation : `application/service/QuestionService` (port sortant inter-module, spec §2.7) —
-interroge `quizup-theme` via le bus et ne retourne que le type local `GameQuestion`
-(`GameQuestionMapper` dans la même couche). `CreateGameCommand` porte les **langues requises**
-(union des langues des joueurs, résolues côté serveur) : la sélection est **stricte** (questions
-disponibles dans toutes ces langues) et la partie échoue en `NotEnoughQuestionsProblem` sinon. Le
-snapshot `GameQuestion` embarque **tous les contenus localisés** (`translations`) : chaque client
-choisit sa langue, avec repli déterministe FR → EN → premier contenu.
+**Aucune** : l'agrégat game ne dépend plus de `quizup-theme` (la sélection des questions est faite
+par la salle/l'appariement/façade, qui transmettent les `GameQuestion` dans la commande). Le
+mapping `theme.Question → game.GameQuestion` est dupliqué chez les émetteurs (un `*-domain` ne
+dépend jamais d'un autre service). `CreateGameCommand` ne porte plus `languages` (seules les
+questions importent) et l'absence de questions suffisantes échoue en `NotEnoughQuestionsProblem`.
+Le snapshot `GameQuestion` embarque **tous les contenus localisés** (`translations`) : chaque
+client choisit sa langue, avec repli déterministe FR → EN → premier contenu.
 
 **Ports sortants locaux** : `GameRepositoryPort`, `GameEventStorePort`.
 

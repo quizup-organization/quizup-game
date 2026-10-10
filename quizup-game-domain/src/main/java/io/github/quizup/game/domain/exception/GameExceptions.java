@@ -3,11 +3,8 @@ package io.github.quizup.game.domain.exception;
 import io.github.quizup.microservice.core.domain.exception.ProblemCategory;
 import io.github.quizup.game.domain.model.GamePlayer;
 import io.github.quizup.game.domain.model.GameRules;
-import io.github.quizup.microservice.core.domain.model.i18n.Language;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Exceptions spécifiques au domaine Game.
@@ -56,15 +53,14 @@ public interface GameExceptions {
     }
 
     class NotEnoughQuestionsProblem extends GameProblem {
-        public NotEnoughQuestionsProblem(String gameId, String topicId, int available, Set<Language> languages) {
+        public NotEnoughQuestionsProblem(String gameId, String topicId, int available) {
             super(gameId, "urn:quizup:game:notEnoughQuestions",
                     ProblemCategory.BUSINESS_INVALID_COMMAND,
                     "Not enough questions",
-                    "Topic " + topicId + " has " + available + " approved questions in "
-                            + languages + ", " + GameRules.TOTAL_ROUNDS + " required to create game " + gameId,
+                    "Topic " + topicId + " has " + available + " prepared questions, "
+                            + GameRules.TOTAL_ROUNDS + " required to create game " + gameId,
                     Map.of("topicId", topicId, "available", available,
-                            "required", GameRules.TOTAL_ROUNDS,
-                            "languages", languages.stream().map(Language::code).toList()));
+                            "required", GameRules.TOTAL_ROUNDS));
         }
     }
 
@@ -146,17 +142,6 @@ public interface GameExceptions {
                     "Round already answered",
                     "Player " + playerId + " has already answered round " + round + " in game " + gameId,
                     Map.of("round", round, "playerId", playerId));
-        }
-    }
-
-    /** Aucune partie en attente/en cours pour ce joueur (reprise : 404 côté façade). */
-    class NoCurrentGameProblem extends GameProblem {
-        public NoCurrentGameProblem(String playerId) {
-            super("player:" + playerId, "urn:quizup:game:noCurrentGame",
-                    ProblemCategory.BUSINESS_RESOURCE_MISSING,
-                    "Aucune partie en cours",
-                    "Aucune partie en attente ou en cours pour le joueur " + playerId,
-                    Map.of("playerId", playerId));
         }
     }
 }

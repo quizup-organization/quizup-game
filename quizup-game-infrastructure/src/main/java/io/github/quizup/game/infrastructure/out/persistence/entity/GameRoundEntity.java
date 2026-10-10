@@ -3,7 +3,6 @@ package io.github.quizup.game.infrastructure.out.persistence.entity;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.game.domain.model.GameRoundType;
 import io.github.quizup.game.domain.model.GameRoundStatus;
-import io.github.quizup.theme.domain.model.QuestionChoice;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

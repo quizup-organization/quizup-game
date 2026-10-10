@@ -4,7 +4,6 @@ import io.github.quizup.game.domain.command.GameCommand;
 import io.github.quizup.game.domain.event.GameEvent;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.*;
-import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import org.apache.commons.lang3.StringUtils;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -25,9 +24,9 @@ import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 /**
  * GameAggregate — Cycle de vie d'une partie à deux joueurs (humain ou bot).
  * <p>
- * Utilise {@link GamePlayerAggregate} pour encapsuler l'état de chaque joueur
- * (identité, présence, score). La partie ne démarre que lorsque les deux joueurs ont rejoint
- * la salle d'attente. Les timeouts sont orchestrés par les sagas applicatives.
+ * Les questions sont préparées par l'appelant et portées par {@code CreateGameCommand} :
+ * aucun I/O inter-service ne s'exécute dans un handler de commande. Les timeouts sont
+ * orchestrés par les sagas applicatives.
  */
 @Aggregate
 public class GameAggregate {
@@ -49,31 +48,14 @@ public class GameAggregate {
     // =============================================
 
     @CommandHandler
-    public GameAggregate(GameCommand.CreateGameCommand command,
-                         QuestionRepositoryPort questionRepositoryPort) {
+    public GameAggregate(GameCommand.CreateGameCommand command) {
         logger.info("Creating game: gameId={}, topicId={}, player1={}, player2={}, player2Type={}",
                 command.gameId(), command.topicId(), command.player1Id(), command.player2Id(), command.player2Type());
 
-        if (StringUtils.isBlank(command.topicId())) {
-            throw new GameExceptions.MissingTopicProblem(command.gameId());
-        }
-        if (StringUtils.isBlank(command.player1Id())) {
-            throw new GameExceptions.MissingPlayerProblem(command.gameId(), GamePlayer.PLAYER_1);
-        }
-        if (StringUtils.isBlank(command.player2Id())) {
-            throw new GameExceptions.MissingPlayerProblem(command.gameId(), GamePlayer.PLAYER_2);
-        }
-
-        List<GameQuestion> questions = questionRepositoryPort.findRandomApprovedByTopicId(
-                command.topicId(),
-                GameRules.TOTAL_ROUNDS,
-                command.languages()
-        );
-
-        if (questions.size() < GameRules.TOTAL_ROUNDS) {
-            throw new GameExceptions.NotEnoughQuestionsProblem(
-                    command.gameId(), command.topicId(), questions.size(), command.languages());
-        }
+        requireTopicId(command.topicId(), command.gameId());
+        requirePlayerId(command.player1Id(), command.gameId(), GamePlayer.PLAYER_1);
+        requirePlayerId(command.player2Id(), command.gameId(), GamePlayer.PLAYER_2);
+        requireQuestions(command.questions(), command.gameId(), command.topicId());
 
         Instant now = Instant.now();
         apply(
@@ -85,7 +67,7 @@ public class GameAggregate {
                         command.player2Id(),
                         command.player2Name(),
                         command.player2Type(),
-                        questions,
+                        command.questions(),
                         command.botDifficulty(),
                         command.player1Progress(),
                         command.player2Progress(),
@@ -197,12 +179,8 @@ public class GameAggregate {
     public void handle(GameCommand.AnswerQuestionCommand command) {
         logger.info("Answering question: gameId={}, playerId={}, choice={}", gameId, command.playerId(), command.choice());
 
-        if (StringUtils.isBlank(command.playerId())) {
-            throw new GameExceptions.MissingPlayerIdProblem(gameId);
-        }
-        if (isNull(command.timestamp())) {
-            throw new GameExceptions.MissingTimestampProblem(gameId);
-        }
+        requirePlayerId(command.playerId(), gameId);
+        requireTimestamp(command.timestamp(), gameId);
 
         GamePlayerAggregate player = resolvePlayer(command.playerId());
         GameRoundAggregate round = rounds.get(currentRound);
@@ -345,6 +323,39 @@ public class GameAggregate {
     // =============================================
     // UTILITY
     // =============================================
+
+    // ── Validateurs (requireXxx : nommés, appelés en tête de handler) ──
+
+    private static void requireTopicId(String topicId, String gameId) {
+        if (StringUtils.isBlank(topicId)) {
+            throw new GameExceptions.MissingTopicProblem(gameId);
+        }
+    }
+
+    private static void requirePlayerId(String playerId, String gameId, GamePlayer slot) {
+        if (StringUtils.isBlank(playerId)) {
+            throw new GameExceptions.MissingPlayerProblem(gameId, slot);
+        }
+    }
+
+    private static void requirePlayerId(String playerId, String gameId) {
+        if (StringUtils.isBlank(playerId)) {
+            throw new GameExceptions.MissingPlayerIdProblem(gameId);
+        }
+    }
+
+    private static void requireTimestamp(Instant timestamp, String gameId) {
+        if (isNull(timestamp)) {
+            throw new GameExceptions.MissingTimestampProblem(gameId);
+        }
+    }
+
+    private static void requireQuestions(List<GameQuestion> questions, String gameId, String topicId) {
+        int available = questions == null ? 0 : questions.size();
+        if (available < GameRules.TOTAL_ROUNDS) {
+            throw new GameExceptions.NotEnoughQuestionsProblem(gameId, topicId, available);
+        }
+    }
 
     /**
      * Résout le {@link GamePlayerAggregate} à partir d'un playerId.

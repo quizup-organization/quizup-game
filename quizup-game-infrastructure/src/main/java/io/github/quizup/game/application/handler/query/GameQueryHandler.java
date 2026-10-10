@@ -43,10 +43,9 @@ public class GameQueryHandler {
     }
 
     @QueryHandler
-    public Game handle(GameQuery.GetCurrentGameQuery query) {
-        logger.debug("Handling GetCurrentGameQuery: playerId={}", query.playerId());
-        return gameRepositoryPort.findCurrentGameByPlayerId(query.playerId())
-                .orElseThrow(() -> new GameExceptions.NoCurrentGameProblem(query.playerId()));
+    public List<Game> handle(GameQuery.GetActiveGamesQuery query) {
+        logger.debug("Handling GetActiveGamesQuery: playerId={}", query.playerId());
+        return gameRepositoryPort.findInProgressGamesByPlayerId(query.playerId());
     }
 
     @QueryHandler

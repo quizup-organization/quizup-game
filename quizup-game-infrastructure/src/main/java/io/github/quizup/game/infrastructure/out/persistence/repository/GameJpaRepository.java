@@ -32,12 +32,11 @@ public interface GameJpaRepository extends JpaRepository<GameEntity, String>, Jp
     @Query("""
             select g from GameEntity g
             where (g.player1Id = :playerId or g.player2Id = :playerId)
-              and g.status in :statuses
+              and g.status = :status
             order by g.createdAt desc
             """)
-    List<GameEntity> findCurrentGamesByPlayerId(@Param("playerId") String playerId,
-                                                @Param("statuses") List<GameStatus> statuses,
-                                                Limit limit);
+    List<GameEntity> findInProgressGamesByPlayerId(@Param("playerId") String playerId,
+                                                   @Param("status") GameStatus status);
 
     @Query("""
             select g from GameEntity g

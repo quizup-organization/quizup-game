@@ -11,7 +11,6 @@ import io.github.quizup.game.domain.model.GameQuestionContent;
 import io.github.quizup.game.domain.model.GameRoundType;
 import io.github.quizup.game.domain.model.GameRules;
 import io.github.quizup.game.domain.model.PlayerProgressSnapshot;
-import io.github.quizup.game.domain.port.out.QuestionRepositoryPort;
 import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,21 +19,14 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.IntStream;
-
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Test Axon in-memory de l'agrégat {@link GameAggregate} via {@link AggregateTestFixture}.
  *
  * <p>100 % in-memory : event store de l'agrégat en mémoire, aucun Postgres ni Axon Server.
- * Le port sortant {@link QuestionRepositoryPort} est un mock. La partie démarre immédiatement à
- * la création (émission de {@code GameCreatedEvent} puis {@code GameStartedEvent}).</p>
+ * Les questions sont portées par la commande (aucun port sortant). La partie démarre immédiatement
+ * à la création (émission de {@code GameCreatedEvent} puis {@code GameStartedEvent}).</p>
  */
 class GameAggregateTest {
 
@@ -55,11 +47,7 @@ class GameAggregateTest {
 
     @Test
     void createGame_appliesCreatedThenStarted() {
-        QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
-
-        fixture.registerInjectableResource(questionRepositoryPort)
-                .givenNoPriorActivity()
+        fixture.givenNoPriorActivity()
                 .when(createCommand())
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameCreatedEvent.class,
@@ -71,11 +59,7 @@ class GameAggregateTest {
 
     @Test
     void createGame_carriesPlayerProgressSnapshot() {
-        QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet())).thenReturn(questions());
-
-        fixture.registerInjectableResource(questionRepositoryPort)
-                .givenNoPriorActivity()
+        fixture.givenNoPriorActivity()
                 .when(createCommand())
                 .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
                         GameEvent.GameCreatedEvent.class,
@@ -88,13 +72,14 @@ class GameAggregateTest {
 
     @Test
     void createGame_withFewerThanSevenQuestions_isRejected() {
-        QuestionRepositoryPort questionRepositoryPort = mock(QuestionRepositoryPort.class);
-        when(questionRepositoryPort.findRandomApprovedByTopicId(anyString(), anyInt(), anySet()))
-                .thenReturn(questions().subList(0, GameRules.TOTAL_ROUNDS - 1));
+        GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
+                GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
+                GamePlayerType.HUMAN, null,
+                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS,
+                questions().subList(0, GameRules.TOTAL_ROUNDS - 1));
 
-        fixture.registerInjectableResource(questionRepositoryPort)
-                .givenNoPriorActivity()
-                .when(createCommand())
+        fixture.givenNoPriorActivity()
+                .when(command)
                 .expectException(GameExceptions.NotEnoughQuestionsProblem.class);
     }
 
@@ -102,11 +87,10 @@ class GameAggregateTest {
     void createGame_withBlankPlayer2_isRejected() {
         GameCommand.CreateGameCommand command = new GameCommand.CreateGameCommand(
                 GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", " ", "Bravo",
-                Set.of(Language.FR), GamePlayerType.HUMAN, null,
-                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS);
+                GamePlayerType.HUMAN, null,
+                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS, questions());
 
-        fixture.registerInjectableResource(mock(QuestionRepositoryPort.class))
-                .givenNoPriorActivity()
+        fixture.givenNoPriorActivity()
                 .when(command)
                 .expectException(GameExceptions.MissingPlayerProblem.class);
     }
@@ -196,8 +180,8 @@ class GameAggregateTest {
     private GameCommand.CreateGameCommand createCommand() {
         return new GameCommand.CreateGameCommand(
                 GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
-                Set.of(Language.FR), GamePlayerType.HUMAN, null,
-                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS);
+                GamePlayerType.HUMAN, null,
+                PLAYER_1_PROGRESS, PLAYER_2_PROGRESS, questions());
     }
 
     /** La partie naît démarrée : {@code GameCreatedEvent} puis {@code GameStartedEvent}. */

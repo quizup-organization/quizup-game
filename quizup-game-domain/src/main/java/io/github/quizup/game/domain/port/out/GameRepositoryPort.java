@@ -17,16 +17,16 @@ public interface GameRepositoryPort {
     Optional<Game> findById(String gameId);
 
     /**
-     * Partie active la plus récente à laquelle participe le joueur (pour le forfait
-     * lorsqu'il passe hors ligne). Vide s'il n'a aucune partie active.
+     * Partie active la plus récente à laquelle participe le joueur <b>face à un humain</b> (pour
+     * le forfait lorsqu'il passe hors ligne). Vide s'il n'a aucune partie active.
      */
-    Optional<Game> findActiveGameByPlayerId(String playerId);
+    Optional<Game> findActiveHumanGameByPlayerId(String playerId);
 
     /**
-     * Partie en cours la plus récente du joueur (`IN_PROGRESS`), pour la reprise depuis
-     * l'application.
+     * Parties en cours du joueur (`IN_PROGRESS`, humain ou bot), les plus récentes d'abord.
+     * Potentiellement vide (reprise : aucune partie active).
      */
-    Optional<Game> findCurrentGameByPlayerId(String playerId);
+    List<Game> findInProgressGamesByPlayerId(String playerId);
 
     SearchResponse<Game> findAll(SearchRequest request);
 

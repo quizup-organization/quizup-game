@@ -2,13 +2,13 @@ package io.github.quizup.game.domain.command;
 
 import io.github.quizup.game.domain.model.BotDifficulty;
 import io.github.quizup.game.domain.model.GamePlayerType;
+import io.github.quizup.game.domain.model.GameQuestion;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.game.domain.model.PlayerProgressSnapshot;
-import io.github.quizup.microservice.core.domain.model.i18n.Language;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 public interface GameCommand {
     String gameId();
@@ -16,9 +16,11 @@ public interface GameCommand {
     /**
      * Crée une partie avec les deux joueurs déclarés. {@code player2Id} est toujours requis :
      * un duel contre le bot utilise {@code QuizUpConstants.SYSTEM_USER_ID} avec
-     * {@code player2Type = BOT}. {@code languages} = langues requises (union des langues des
-     * joueurs) : seules les questions disponibles dans **toutes** ces langues sont tirées
-     * (sélection stricte).
+     * {@code player2Type = BOT}.
+     *
+     * <p>{@code questions} est préparé par l'appelant (salle, appariement ou façade) : la
+     * sélection (sujet, langues, nombre) est un I/O inter-service qui ne doit pas s'exécuter
+     * dans le handler de commande. L'agrégat ne fait que valider la complétude.</p>
      *
      * <p>{@code player1Progress}/{@code player2Progress} figent la progression des joueurs à la
      * création : l'écran de résultat l'affiche au lieu de la progression courante du compte.</p>
@@ -30,11 +32,11 @@ public interface GameCommand {
             String player1Name,
             String player2Id,
             String player2Name,
-            Set<Language> languages,
             GamePlayerType player2Type,
             BotDifficulty botDifficulty,
             PlayerProgressSnapshot player1Progress,
-            PlayerProgressSnapshot player2Progress
+            PlayerProgressSnapshot player2Progress,
+            List<GameQuestion> questions
     ) implements GameCommand {
     }
 

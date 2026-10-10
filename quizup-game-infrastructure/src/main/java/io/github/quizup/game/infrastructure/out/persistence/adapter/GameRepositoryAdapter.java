@@ -49,7 +49,7 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Game> findActiveGameByPlayerId(String playerId) {
+    public Optional<Game> findActiveHumanGameByPlayerId(String playerId) {
         return gameJpaRepository.findActiveGamesByPlayerId(
                         playerId,
                         GameStatus.IN_PROGRESS,
@@ -61,14 +61,12 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Game> findCurrentGameByPlayerId(String playerId) {
-        return gameJpaRepository.findCurrentGamesByPlayerId(
-                        playerId,
-                        List.of(GameStatus.IN_PROGRESS),
-                        Limit.of(1))
+    public List<Game> findInProgressGamesByPlayerId(String playerId) {
+        return gameJpaRepository
+                .findInProgressGamesByPlayerId(playerId, GameStatus.IN_PROGRESS)
                 .stream()
-                .findFirst()
-                .map(GameEntityMapper::toDomain);
+                .map(GameEntityMapper::toDomain)
+                .toList();
     }
 
     @Override

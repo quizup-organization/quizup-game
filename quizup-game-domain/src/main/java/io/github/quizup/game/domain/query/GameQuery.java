@@ -12,10 +12,10 @@ public interface GameQuery {
     }
 
     /**
-     * Partie en cours du joueur (reprise après fermeture de l'app). Absence ⇒
-     * {@code NoCurrentGameProblem}.
+     * Parties en cours du joueur (`IN_PROGRESS`, humain ou bot), les plus récentes d'abord.
+     * Collection potentiellement vide : l'absence de partie active n'est pas une erreur.
      */
-    record GetCurrentGameQuery(String playerId) implements GameQuery {
+    record GetActiveGamesQuery(String playerId) implements GameQuery {
     }
 
     record GetGameEventsQuery(String gameId) implements GameQuery {
