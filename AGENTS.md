@@ -12,11 +12,12 @@
 
 Gestion des **parties** de quiz à deux joueurs (humain ou bot) : création, réponse aux questions,
 scoring, abandon (`forfeit`), fin (`end`) et annulation. Les **questions** proviennent de
-`quizup-theme` mais sont **préparées par l'appelant** (salle, appariement ou façade) et portées par
+`quizup-theme` mais sont **préparées par l'appelant** (la **salle**, unique point d'entrée de
+préparation — salle partagée, défi, appariement ou duel bot) et portées par
 `CreateGameCommand` : l'agrégat game ne fait **aucun I/O** (voir
 [`command-preparation.md`](../../best-practices/.backend/command-preparation.md)). Le bot est un
-utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie démarre immédiatement à la
-création** (la présence des deux joueurs est garantie en amont par la salle / l'appariement de
+utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie démarre immédiatement à sa
+création** (la présence des deux joueurs est garantie en amont par la salle de
 `quizup-matchmaking`) : plus de salle d'attente dans l'agrégat game.
 
 Le `GameCreatedEvent` porte un **snapshot de progression** par joueur (`PlayerProgressSnapshot` :
@@ -69,7 +70,7 @@ Commandes :
 ## 4. Dépendances inter-services
 
 **Aucune** : l'agrégat game ne dépend plus de `quizup-theme` (la sélection des questions est faite
-par la salle/l'appariement/façade, qui transmettent les `GameQuestion` dans la commande). Le
+par la salle, qui transmet les `GameQuestion` dans la commande). Le
 mapping `theme.Question → game.GameQuestion` est dupliqué chez les émetteurs (un `*-domain` ne
 dépend jamais d'un autre service). `CreateGameCommand` ne porte plus `languages` (seules les
 questions importent) et l'absence de questions suffisantes échoue en `NotEnoughQuestionsProblem`.
