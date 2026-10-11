@@ -1,3 +1,9 @@
+## [8.0.1](https://github.com/quizup-organization/quizup-game/compare/v8.0.0...v8.0.1) (2026-10-11)
+
+### Performance Improvements
+
+* **game:** cache d'agrégats Axon (évite le replay event store à chaque commande) ([8e41a0b](https://github.com/quizup-organization/quizup-game/commit/8e41a0bc89eae0957f5bad36f2818a226468ed1a))
+
 ## [8.0.0](https://github.com/quizup-organization/quizup-game/compare/v7.0.0...v8.0.0) (2026-10-10)
 
 ### ⚠ BREAKING CHANGES
