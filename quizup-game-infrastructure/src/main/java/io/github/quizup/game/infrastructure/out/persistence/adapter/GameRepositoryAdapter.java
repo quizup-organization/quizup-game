@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,5 +103,11 @@ public class GameRepositoryAdapter implements GameRepositoryPort {
     @Transactional(readOnly = true)
     public int countAnsweredQuestions(String playerId, String topicId) {
         return (int) gameJpaRepository.countAnsweredQuestions(playerId, topicId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> findPlayedQuestionIds(String topicId, Collection<String> playerIds) {
+        return gameJpaRepository.findPlayedQuestionIds(topicId, playerIds);
     }
 }

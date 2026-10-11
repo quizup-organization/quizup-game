@@ -64,6 +64,9 @@ Commandes :
   résultat (scores, vainqueur, `botGame`, `botDifficulty`, sujet/adversaire, `basePoints`,
   `speedBonus`, `correctAnswers`, `fastAnswers`, `answeredRounds`/`totalRounds`) — les règles de
   scoring restent dans le domaine (`GameRules`).
+- `GetPlayedQuestionIdsQuery(topicId, playerIds)` → `List<String>` : questions déjà jouées par les
+  joueurs sur un thème (rounds réellement affichés, `status != CREATED`), consommée par la
+  préparation de salle (`quizup-matchmaking`) pour éviter les répétitions.
 
 ---
 

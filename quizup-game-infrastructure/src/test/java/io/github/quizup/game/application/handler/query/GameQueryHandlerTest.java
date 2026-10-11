@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -72,6 +73,18 @@ class GameQueryHandlerTest {
                 null,
                 30, 26, 2, 2, 3, 3, 0, 0, 0, 0);
         assertEquals(expected, result);
+    }
+
+    @Test
+    void played_question_ids_delegates_topic_and_players() {
+        when(repository.findPlayedQuestionIds("topic-1", Set.of("player-1", "player-2")))
+                .thenReturn(List.of("question-1", "question-2"));
+
+        List<String> result = handler.handle(
+                new GameQuery.GetPlayedQuestionIdsQuery("topic-1", Set.of("player-1", "player-2")));
+
+        assertEquals(List.of("question-1", "question-2"), result);
+        verify(repository).findPlayedQuestionIds("topic-1", Set.of("player-1", "player-2"));
     }
 
     private static Game finishedGame() {

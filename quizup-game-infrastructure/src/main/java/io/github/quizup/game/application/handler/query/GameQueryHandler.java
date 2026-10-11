@@ -86,4 +86,11 @@ public class GameQueryHandler {
                 query.playerId(), query.topicId());
         return gameRepositoryPort.countAnsweredQuestions(query.playerId(), query.topicId());
     }
+
+    @QueryHandler
+    public List<String> handle(GameQuery.GetPlayedQuestionIdsQuery query) {
+        logger.debug("Handling GetPlayedQuestionIdsQuery: topicId={}, players={}",
+                query.topicId(), query.playerIds().size());
+        return gameRepositoryPort.findPlayedQuestionIds(query.topicId(), query.playerIds());
+    }
 }

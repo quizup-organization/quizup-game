@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -73,4 +74,18 @@ public interface GameJpaRepository extends JpaRepository<GameEntity, String>, Jp
               )
             """)
     long countAnsweredQuestions(@Param("playerId") String playerId, @Param("topicId") String topicId);
+
+    /**
+     * Questions distinctes déjà jouées par les joueurs sur un thème : rounds réellement affichés
+     * ({@code status != CREATED}) des parties où le joueur a participé (peu importe le côté).
+     */
+    @Query("""
+            select distinct r.questionId
+            from GameEntity g join g.rounds r
+            where g.topicId = :topicId
+              and r.status <> io.github.quizup.game.domain.model.GameRoundStatus.CREATED
+              and (g.player1Id in :playerIds or g.player2Id in :playerIds)
+            """)
+    List<String> findPlayedQuestionIds(@Param("topicId") String topicId,
+                                       @Param("playerIds") Collection<String> playerIds);
 }

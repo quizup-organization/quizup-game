@@ -3,6 +3,7 @@ package io.github.quizup.game.domain.query;
 import io.github.quizup.microservice.core.infrastructure.in.api.request.SearchRequest;
 
 import java.time.Instant;
+import java.util.Set;
 
 public interface GameQuery {
     record SearchGameQuery(SearchRequest request) implements GameQuery {
@@ -51,5 +52,17 @@ public interface GameQuery {
      * « questions complétées » de la fiche sujet). Réponses effectives uniquement (timeouts exclus).
      */
     record GetTopicCompletionQuery(String playerId, String topicId) implements GameQuery {
+    }
+
+    /**
+     * Questions <b>déjà jouées</b> par les joueurs sur un thème : questions de rounds réellement
+     * affichés ({@code status != CREATED}) des parties où le joueur a participé. Une partie
+     * annulée avant son premier round ne consomme donc aucune question. Sert à la préparation de
+     * salle (éviter les répétitions) — collection potentiellement vide.
+     */
+    record GetPlayedQuestionIdsQuery(
+            String topicId,
+            Set<String> playerIds
+    ) implements GameQuery {
     }
 }

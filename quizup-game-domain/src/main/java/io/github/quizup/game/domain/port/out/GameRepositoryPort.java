@@ -7,6 +7,7 @@ import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,4 +47,10 @@ public interface GameRepositoryPort {
      * thème (timeouts exclus) — progression « questions complétées » d'une fiche sujet.
      */
     int countAnsweredQuestions(String playerId, String topicId);
+
+    /**
+     * Questions <b>déjà jouées</b> par les joueurs sur un thème : questions de rounds réellement
+     * affichés ({@code status != CREATED}), dédupliquées. Potentiellement vide.
+     */
+    List<String> findPlayedQuestionIds(String topicId, Collection<String> playerIds);
 }
