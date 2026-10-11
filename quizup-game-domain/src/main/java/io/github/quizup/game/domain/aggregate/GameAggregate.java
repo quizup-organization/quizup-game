@@ -27,8 +27,13 @@ import static org.axonframework.modelling.command.AggregateLifecycle.apply;
  * Les questions sont préparées par l'appelant et portées par {@code CreateGameCommand} :
  * aucun I/O inter-service ne s'exécute dans un handler de commande. Les timeouts sont
  * orchestrés par les sagas applicatives.
+ * <p>
+ * La partie est longue (7 rounds ≈ 100+ événements) et chaque commande/deadline relit l'agrégat :
+ * le cache Axon ({@code gameAggregateCache}) évite le replay complet depuis l'event store entre
+ * deux commandes — sans lui, l'event store devient le principal coût Postgres sous charge
+ * (test 1000 parties).
  */
-@Aggregate
+@Aggregate(cache = "gameAggregateCache")
 public class GameAggregate {
     private static final Logger logger = LoggerFactory.getLogger(GameAggregate.class);
 
