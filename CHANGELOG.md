@@ -1,3 +1,9 @@
+## [8.1.0](https://github.com/quizup-organization/quizup-game/compare/v8.0.1...v8.1.0) (2026-10-11)
+
+### Features
+
+* **game:** questions déjà jouées par joueurs sur un thème ([81926be](https://github.com/quizup-organization/quizup-game/commit/81926be7135edc1e169fc717d681377591ed3c7f))
+
 ## [8.0.1](https://github.com/quizup-organization/quizup-game/compare/v8.0.0...v8.0.1) (2026-10-11)
 
 ### Performance Improvements
