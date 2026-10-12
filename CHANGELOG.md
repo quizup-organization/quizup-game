@@ -1,3 +1,9 @@
+## [8.3.0](https://github.com/quizup-organization/quizup-game/compare/v8.2.0...v8.3.0) (2026-10-12)
+
+### Features
+
+* **console:** consume quizup-sdk 4.6.0 (build-info + API interne event store/scheduled) ([9911d1e](https://github.com/quizup-organization/quizup-game/commit/9911d1e91845818925f1c4c829b5854b1a9a0ca5))
+
 ## [8.2.0](https://github.com/quizup-organization/quizup-game/compare/v8.1.0...v8.2.0) (2026-10-12)
 
 ### Features
