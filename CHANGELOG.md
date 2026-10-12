@@ -1,3 +1,9 @@
+## [8.4.1](https://github.com/quizup-organization/quizup-game/compare/v8.4.0...v8.4.1) (2026-10-12)
+
+### Bug Fixes
+
+* **game:** contrat profile-domain 3.4.0 (3.0.0 élagué de GitHub Packages) ([59128a7](https://github.com/quizup-organization/quizup-game/commit/59128a745b53d5f2d75d1c8dee48da9aba74f208))
+
 ## [8.4.0](https://github.com/quizup-organization/quizup-game/compare/v8.3.0...v8.4.0) (2026-10-12)
 
 ### Features
