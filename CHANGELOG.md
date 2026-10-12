@@ -1,3 +1,9 @@
+## [8.4.0](https://github.com/quizup-organization/quizup-game/compare/v8.3.0...v8.4.0) (2026-10-12)
+
+### Features
+
+* **console:** consume quizup-sdk 4.7.0 (lag, commandes en vol, snapshots, scheduled) ([30a5b0f](https://github.com/quizup-organization/quizup-game/commit/30a5b0fbf637f1ea4af4307d270242be2c41b7de))
+
 ## [8.3.0](https://github.com/quizup-organization/quizup-game/compare/v8.2.0...v8.3.0) (2026-10-12)
 
 ### Features
