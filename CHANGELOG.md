@@ -1,3 +1,9 @@
+## [8.4.2](https://github.com/quizup-organization/quizup-game/compare/v8.4.1...v8.4.2) (2026-10-12)
+
+### Bug Fixes
+
+* **game:** SDK quizup-parent 4.7.1 (cycle de beans Configuration/bus distribué au démarrage) ([833d799](https://github.com/quizup-organization/quizup-game/commit/833d79980e53fab2fcc6dd4468e70f4a5d75be38))
+
 ## [8.4.1](https://github.com/quizup-organization/quizup-game/compare/v8.4.0...v8.4.1) (2026-10-12)
 
 ### Bug Fixes
