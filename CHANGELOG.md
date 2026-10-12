@@ -1,3 +1,9 @@
+## [8.2.0](https://github.com/quizup-organization/quizup-game/compare/v8.1.0...v8.2.0) (2026-10-12)
+
+### Features
+
+* **console:** consume quizup-sdk 4.5.2 (DLQ Axon par défaut + agent console) ([cce65b8](https://github.com/quizup-organization/quizup-game/commit/cce65b8f137ee33edfe4f1ef68cc7519c51734f1))
+
 ## [8.1.0](https://github.com/quizup-organization/quizup-game/compare/v8.0.1...v8.1.0) (2026-10-11)
 
 ### Features
