@@ -88,7 +88,11 @@ client choisit sa langue, avec repli déterministe FR → EN → premier contenu
   `NotEnoughQuestionsProblem` (échec explicite, jamais de partie tronquée).
 - **Expiration** : `GameFlowSaga` planifie `GAME_EXPIRED` (24 h) à la création ; une partie jamais
   terminée est close au score. La deadline est annulée à `GameEndedEvent` / `GameCancelledEvent`.
-- **Badge Éclair côté profile** : 5 réponses < 3 s dans un même duel (voir `quizup-profile`).
+- **Badges côté profile** : 5 réponses < 3 s dans un même duel (« Éclair ») et, depuis
+  `GameEndedEvent.player1/player2ImageCorrectAnswers`, les bonnes réponses sur les questions
+  **illustrées** (« Œil de lynx »). Les rounds reconstruits depuis `GameCreatedEvent` gardent le
+  snapshot complet de la question (`imageUrl`), le comptage ne change donc **pas** le schéma des
+  rounds ; un round non répondu ne compte pas (voir `quizup-profile`).
 
 ---
 
