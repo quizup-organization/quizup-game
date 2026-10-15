@@ -1,3 +1,9 @@
+## [8.5.0](https://github.com/quizup-organization/quizup-game/compare/v8.4.2...v8.5.0) (2026-10-15)
+
+### Features
+
+* **game:** compteurs de bonnes reponses sur questions illustrees ([42d9d8c](https://github.com/quizup-organization/quizup-game/commit/42d9d8ce2f6b6a2e0be19e5b4d5a9dba6b2d21e4))
+
 ## [8.4.2](https://github.com/quizup-organization/quizup-game/compare/v8.4.1...v8.4.2) (2026-10-12)
 
 ### Bug Fixes
