@@ -415,8 +415,28 @@ public class GameAggregate {
                 countFast(GamePlayer.PLAYER_1),
                 countCorrect(GamePlayer.PLAYER_2),
                 countFast(GamePlayer.PLAYER_2),
+                countImageCorrect(GamePlayer.PLAYER_1),
+                countImageCorrect(GamePlayer.PLAYER_2),
                 endedAt
         );
+    }
+
+    /**
+     * Bonnes réponses du joueur sur les questions **illustrées** (un round non répondu ne compte
+     * pas). Alimente le badge « Œil de lynx » de {@code quizup-profile}.
+     */
+    private int countImageCorrect(GamePlayer player) {
+        return (int) rounds.values().stream()
+                .filter(round -> hasImage(round.getQuestion()))
+                .map(round -> round.getAnswer(player))
+                .filter(answer -> answer != null && answer.correct())
+                .count();
+    }
+
+    private static boolean hasImage(GameQuestion question) {
+        return question != null
+                && question.imageUrl() != null
+                && !question.imageUrl().isBlank();
     }
 
     private int countCorrect(GamePlayer player) {

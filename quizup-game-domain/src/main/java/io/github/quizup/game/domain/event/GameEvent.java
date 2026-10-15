@@ -123,6 +123,9 @@ public interface GameEvent {
             int player1FastAnswers,
             int player2CorrectAnswers,
             int player2FastAnswers,
+            /** Bonnes réponses sur les questions **illustrées** (badge « Œil de lynx »). */
+            int player1ImageCorrectAnswers,
+            int player2ImageCorrectAnswers,
             Instant endedAt
     ) implements GameEvent {
     }

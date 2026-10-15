@@ -210,6 +210,7 @@ class GameAggregateTest {
                 20, 10,
                 2, 1,
                 1, 0,
+                0, 0,
                 Instant.now());
     }
 
@@ -223,6 +224,42 @@ class GameAggregateTest {
         );
     }
 
+    @Test
+    void endGame_countsCorrectAnswersOnImageQuestions() {
+        Instant shownAt = Instant.now();
+        Instant revealedAt = shownAt.plusMillis(GameRules.QUESTION_REVEAL_MS);
+        Instant answeredAt = revealedAt.plusSeconds(2);
+
+        fixture.given(concat(createdWithImages(), roundStarted(shownAt), revealed(revealedAt),
+                        answeredCorrectlyByPlayer1(answeredAt)))
+                .when(new GameCommand.EndGameCommand(GAME_ID))
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
+                        GameEvent.GameEndedEvent.class,
+                        e -> {
+                            GameEvent.GameEndedEvent ended = (GameEvent.GameEndedEvent) e;
+                            return ended.player1ImageCorrectAnswers() == 1
+                                    && ended.player2ImageCorrectAnswers() == 0;
+                        }));
+    }
+
+    @Test
+    void endGame_ignoresImageCountingWithoutIllustration() {
+        Instant shownAt = Instant.now();
+        Instant revealedAt = shownAt.plusMillis(GameRules.QUESTION_REVEAL_MS);
+        Instant answeredAt = revealedAt.plusSeconds(2);
+
+        fixture.given(concat(created(), roundStarted(shownAt), revealed(revealedAt),
+                        answeredCorrectlyByPlayer1(answeredAt)))
+                .when(new GameCommand.EndGameCommand(GAME_ID))
+                .expectEventsMatching(QuizUpAxonMatchers.hasPayloadMatching(
+                        GameEvent.GameEndedEvent.class,
+                        e -> {
+                            GameEvent.GameEndedEvent ended = (GameEvent.GameEndedEvent) e;
+                            return ended.player1ImageCorrectAnswers() == 0
+                                    && ended.player1CorrectAnswers() == 1;
+                        }));
+    }
+
     private GameEvent.QuestionRevealedEvent revealed(Instant revealedAt) {
         return new GameEvent.QuestionRevealedEvent(
                 GAME_ID,
@@ -230,6 +267,35 @@ class GameAggregateTest {
                 revealedAt,
                 revealedAt.plusSeconds(GameRules.ROUND_TIMEOUT_SECONDS)
         );
+    }
+
+    /** Même partie, mais toutes les questions sont **illustrées**. */
+    private Object[] createdWithImages() {
+        Instant now = Instant.now();
+        return new Object[]{
+                new GameEvent.GameCreatedEvent(
+                        GAME_ID, TOPIC_ID, PLAYER_1, "Alpha", PLAYER_2, "Bravo",
+                        GamePlayerType.HUMAN, imageQuestions(), null,
+                        PLAYER_1_PROGRESS, PLAYER_2_PROGRESS, now),
+                new GameEvent.GameStartedEvent(GAME_ID, now, now.plusMillis(GameRules.MATCH_INTRO_MS))
+        };
+    }
+
+    private static List<GameQuestion> imageQuestions() {
+        return questions().stream()
+                .map(question -> new GameQuestion(
+                        question.questionId(),
+                        question.translations(),
+                        "https://media.quizup.cnadjim.fr/wikipedia/illustration.png",
+                        question.difficulty(),
+                        question.correctAnswer()))
+                .toList();
+    }
+
+    private static GameEvent.QuestionAnsweredEvent answeredCorrectlyByPlayer1(Instant answeredAt) {
+        return new GameEvent.QuestionAnsweredEvent(
+                GAME_ID, GameRoundType.ROUND_1, "question-0", PLAYER_1,
+                GamePlayerType.HUMAN, GameQuestionChoice.A, true, answeredAt, 10, 2000);
     }
 
     private static List<GameQuestion> questions() {
