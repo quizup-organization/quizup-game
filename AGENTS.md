@@ -93,7 +93,9 @@ client choisit sa langue, avec repli déterministe FR → EN → premier contenu
   terminée est close au score. La deadline est annulée à `GameEndedEvent` / `GameCancelledEvent`.
 - **Badges côté profile** : 5 réponses < 3 s dans un même duel (« Éclair ») et, depuis
   `GameEndedEvent.player1/player2ImageCorrectAnswers`, les bonnes réponses sur les questions
-  **illustrées** (« Œil de lynx »). Les rounds reconstruits depuis `GameCreatedEvent` gardent le
+  **illustrées** (« Œil de lynx »). **Aucun badge ni titre ne s'acquiert sur un entraînement bot**
+  (le service émet les faits, profile les ignore pour `botGame=true`). Les rounds reconstruits
+  depuis `GameCreatedEvent` gardent le
   snapshot complet de la question (`imageUrl`), le comptage ne change donc **pas** le schéma des
   rounds ; un round non répondu ne compte pas (voir `quizup-profile`).
 
