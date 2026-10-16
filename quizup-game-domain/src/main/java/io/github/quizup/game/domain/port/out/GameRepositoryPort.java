@@ -3,6 +3,9 @@ package io.github.quizup.game.domain.port.out;
 import io.github.quizup.microservice.core.infrastructure.in.api.request.SearchRequest;
 import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.GameHistoryOutcome;
+import io.github.quizup.game.domain.model.GameHistorySort;
+import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
 
@@ -32,10 +35,21 @@ public interface GameRepositoryPort {
     SearchResponse<Game> findAll(SearchRequest request);
 
     /**
-     * Historique paginé des parties d'un joueur, plus récentes d'abord.
-     * {@code topicId} / {@code opponentId} optionnels ({@code null} = pas de filtre).
+     * Historique paginé des parties d'un joueur.
+     *
+     * <p>Filtres optionnels ({@code null} = pas de filtre) : {@code topicId}, {@code opponentId},
+     * {@code opponentType} (type du joueur 2) et {@code outcome} (issue <b>relative au joueur
+     * interrogé</b>, {@link GameHistoryOutcome#ALL} = aucun filtre). {@code sort} porte l'ordre
+     * d'affichage ({@link GameHistorySort#RECENT} par défaut).</p>
      */
-    PlayerGamesPage findPlayerGames(String playerId, String topicId, String opponentId, int page, int size);
+    PlayerGamesPage findPlayerGames(String playerId,
+                                    String topicId,
+                                    String opponentId,
+                                    GamePlayerType opponentType,
+                                    GameHistoryOutcome outcome,
+                                    GameHistorySort sort,
+                                    int page,
+                                    int size);
 
     /**
      * Thèmes les plus joués (parties créées) depuis {@code since}, ordre décroissant.

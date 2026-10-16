@@ -4,6 +4,7 @@ import io.github.quizup.microservice.core.domain.model.notification.EventEnvelop
 import io.github.quizup.microservice.core.infrastructure.in.api.response.SearchResponse;
 import io.github.quizup.game.domain.exception.GameExceptions;
 import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.GameHistorySort;
 import io.github.quizup.game.domain.model.GameResult;
 import io.github.quizup.game.domain.model.PlayerGamesPage;
 import io.github.quizup.game.domain.model.TopicPopularity;
@@ -61,9 +62,17 @@ public class GameQueryHandler {
 
     @QueryHandler
     public PlayerGamesPage handle(GameQuery.GetPlayerGamesQuery query) {
-        logger.debug("Handling GetPlayerGamesQuery: playerId={}, topicId={}", query.playerId(), query.topicId());
+        logger.debug("Handling GetPlayerGamesQuery: playerId={}, topicId={}, outcome={}, sort={}",
+                query.playerId(), query.topicId(), query.outcome(), query.sort());
         return gameRepositoryPort.findPlayerGames(
-                query.playerId(), query.topicId(), query.opponentId(), query.page(), query.size());
+                query.playerId(),
+                query.topicId(),
+                query.opponentId(),
+                query.opponentType(),
+                query.outcome(),
+                query.sort() == null ? GameHistorySort.RECENT : query.sort(),
+                query.page(),
+                query.size());
     }
 
     @QueryHandler

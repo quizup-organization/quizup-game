@@ -1,6 +1,9 @@
 package io.github.quizup.game.domain.query;
 
 import io.github.quizup.microservice.core.infrastructure.in.api.request.SearchRequest;
+import io.github.quizup.game.domain.model.GameHistoryOutcome;
+import io.github.quizup.game.domain.model.GameHistorySort;
+import io.github.quizup.game.domain.model.GamePlayerType;
 
 import java.time.Instant;
 import java.util.Set;
@@ -24,12 +27,21 @@ public interface GameQuery {
 
     /**
      * Historique paginé des parties d'un joueur.
-     * {@code topicId} et {@code opponentId} sont optionnels ({@code null} = pas de filtre).
+     *
+     * <p>Filtres optionnels ({@code null} = pas de filtre) : {@code topicId}, {@code opponentId}
+     * (l'adversaire, quel que soit son côté) et {@code opponentType} (type du joueur 2 —
+     * {@link GamePlayerType#BOT} isole les entraînements). {@code outcome} filtre l'issue
+     * <b>relative au joueur interrogé</b> ({@code null} ou {@link GameHistoryOutcome#ALL} =
+     * aucun filtre). {@code sort} est l'ordre d'affichage ({@code null} = {@link
+     * GameHistorySort#RECENT}).</p>
      */
     record GetPlayerGamesQuery(
             String playerId,
             String topicId,
             String opponentId,
+            GamePlayerType opponentType,
+            GameHistoryOutcome outcome,
+            GameHistorySort sort,
             int page,
             int size
     ) implements GameQuery {

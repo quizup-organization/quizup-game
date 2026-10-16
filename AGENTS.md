@@ -53,8 +53,11 @@ Commandes :
 
 - `GetActiveGamesQuery(playerId)` → `List<Game>` : parties en cours (`IN_PROGRESS`, humain ou bot),
   plus récentes d'abord, pour la bannière de reprise ; collection vide si aucune — **jamais de 404**.
-- `GetPlayerGamesQuery(playerId, topicId, opponentId, page, size)` → `PlayerGamesPage` : historique
-  d'un joueur (filtres optionnels, plus récents d'abord), sans passer par le search.
+- `GetPlayerGamesQuery(playerId, topicId, opponentId, opponentType, outcome, sort, page, size)` →
+  `PlayerGamesPage` : historique d'un joueur — filtres optionnels (`topicId`, `opponentId`,
+  `opponentType` — `BOT` isole les entraînements), `outcome` **relatif au joueur interrogé**
+  (`ALL|WIN|LOSS|DRAW|IN_PROGRESS|CANCELLED`) et `sort` (`RECENT|OLDEST|SCORE`, `SCORE` = score du
+  joueur interrogé) — sans passer par le search.
 - `GetPopularTopicsQuery(since, limit)` → `List<TopicPopularity>` : thèmes les plus joués
   (parties créées sur la fenêtre), group by `topic_id`.
 - `GetGameEventsQuery(gameId)` → `List<EventEnvelope>` (SDK) : event store exposé avec le payload

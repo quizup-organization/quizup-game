@@ -4,8 +4,6 @@ import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameStatus;
 import io.github.quizup.game.infrastructure.out.persistence.entity.GameEntity;
 import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -38,18 +36,6 @@ public interface GameJpaRepository extends JpaRepository<GameEntity, String>, Jp
             """)
     List<GameEntity> findInProgressGamesByPlayerId(@Param("playerId") String playerId,
                                                    @Param("status") GameStatus status);
-
-    @Query("""
-            select g from GameEntity g
-            where (g.player1Id = :playerId or g.player2Id = :playerId)
-              and (:topicId is null or g.topicId = :topicId)
-              and (:opponentId is null or g.player1Id = :opponentId or g.player2Id = :opponentId)
-            order by g.createdAt desc
-            """)
-    Page<GameEntity> findPlayerGames(@Param("playerId") String playerId,
-                                     @Param("topicId") String topicId,
-                                     @Param("opponentId") String opponentId,
-                                     Pageable pageable);
 
     @Query("""
             select g.topicId, count(g)

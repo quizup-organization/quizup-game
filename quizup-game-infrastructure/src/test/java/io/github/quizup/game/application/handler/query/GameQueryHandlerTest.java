@@ -1,6 +1,8 @@
 package io.github.quizup.game.application.handler.query;
 
 import io.github.quizup.game.domain.model.Game;
+import io.github.quizup.game.domain.model.GameHistoryOutcome;
+import io.github.quizup.game.domain.model.GameHistorySort;
 import io.github.quizup.game.domain.model.GamePlayerType;
 import io.github.quizup.game.domain.model.GameQuestionChoice;
 import io.github.quizup.game.domain.model.GameResult;
@@ -40,13 +42,36 @@ class GameQueryHandlerTest {
                 .totalElements(0)
                 .totalPages(0)
                 .build();
-        when(repository.findPlayerGames("me", "topic-1", "opponent-1", 1, 20)).thenReturn(page);
+        when(repository.findPlayerGames("me", "topic-1", "opponent-1",
+                GamePlayerType.BOT, GameHistoryOutcome.WIN, GameHistorySort.SCORE, 1, 20))
+                .thenReturn(page);
 
-        PlayerGamesPage result = handler.handle(
-                new GameQuery.GetPlayerGamesQuery("me", "topic-1", "opponent-1", 1, 20));
+        PlayerGamesPage result = handler.handle(new GameQuery.GetPlayerGamesQuery(
+                "me", "topic-1", "opponent-1",
+                GamePlayerType.BOT, GameHistoryOutcome.WIN, GameHistorySort.SCORE, 1, 20));
 
         assertEquals(page, result);
-        verify(repository).findPlayerGames("me", "topic-1", "opponent-1", 1, 20);
+        verify(repository).findPlayerGames("me", "topic-1", "opponent-1",
+                GamePlayerType.BOT, GameHistoryOutcome.WIN, GameHistorySort.SCORE, 1, 20);
+    }
+
+    @Test
+    void player_games_defaults_to_recent_order_without_filters() {
+        PlayerGamesPage page = PlayerGamesPage.builder()
+                .games(List.of())
+                .page(0)
+                .size(20)
+                .totalElements(0)
+                .totalPages(0)
+                .build();
+        when(repository.findPlayerGames("me", null, null, null, null, GameHistorySort.RECENT, 0, 20))
+                .thenReturn(page);
+
+        PlayerGamesPage result = handler.handle(
+                new GameQuery.GetPlayerGamesQuery("me", null, null, null, null, null, 0, 20));
+
+        assertEquals(page, result);
+        verify(repository).findPlayerGames("me", null, null, null, null, GameHistorySort.RECENT, 0, 20);
     }
 
     @Test
