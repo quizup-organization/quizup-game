@@ -1,3 +1,9 @@
+## [8.6.0](https://github.com/quizup-organization/quizup-game/compare/v8.5.0...v8.6.0) (2026-10-16)
+
+### Features
+
+* **game:** historique d'un joueur filtrable et triable ([3238436](https://github.com/quizup-organization/quizup-game/commit/3238436d943623e89c0f069effeb2223981187b7))
+
 ## [8.5.0](https://github.com/quizup-organization/quizup-game/compare/v8.4.2...v8.5.0) (2026-10-15)
 
 ### Features
