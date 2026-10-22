@@ -1,3 +1,9 @@
+## [8.7.2](https://github.com/quizup-organization/quizup-game/compare/v8.7.1...v8.7.2) (2026-10-22)
+
+### Bug Fixes
+
+* **game:** fige l'Elo des joueurs à la création de la partie ([be5df93](https://github.com/quizup-organization/quizup-game/commit/be5df93124772e0b17b787901937686583a1aefe))
+
 ## [8.7.1](https://github.com/quizup-organization/quizup-game/compare/v8.7.0...v8.7.1) (2026-10-22)
 
 ### Bug Fixes
