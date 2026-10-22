@@ -34,6 +34,11 @@
             <groupId>io.github.quizup</groupId>
             <artifactId>quizup-microservice-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.github.quizup</groupId>
+            <artifactId>quizup-identity-domain</artifactId>
+            <version>2.12.0</version>
+        </dependency>
 
         <!-- TESTS (agrégats & sagas in-memory) -->
         <dependency>
