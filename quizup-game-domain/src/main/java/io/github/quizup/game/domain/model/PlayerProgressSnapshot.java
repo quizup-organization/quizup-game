@@ -8,7 +8,12 @@ package io.github.quizup.game.domain.model;
  * <p>Le bot n'a pas de progression : l'appelant fournit un niveau d'affichage dérivé de sa
  * difficulté.</p>
  */
-public record PlayerProgressSnapshot(int level, int xpTotal) {
+public record PlayerProgressSnapshot(int level, int xpTotal, Integer rating) {
+
+    /** Snapshot historique sans Elo (événements antérieurs au champ). */
+    public PlayerProgressSnapshot(int level, int xpTotal) {
+        this(level, xpTotal, null);
+    }
 
     /**
      * Niveau/XP d'<b>affichage</b> du bot selon sa difficulté : le bot n'a pas de progression
@@ -20,6 +25,6 @@ public record PlayerProgressSnapshot(int level, int xpTotal) {
             case NORMAL -> 3;
             case HARD -> 5;
         };
-        return new PlayerProgressSnapshot(level, 100 * (level - 1) * (level - 1));
+        return new PlayerProgressSnapshot(level, 100 * (level - 1) * (level - 1), 200);
     }
 }

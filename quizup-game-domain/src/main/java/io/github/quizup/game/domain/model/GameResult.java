@@ -31,7 +31,11 @@ public record GameResult(
         int myLevel,
         int myXpTotal,
         int opponentLevel,
-        int opponentXpTotal
+        int opponentXpTotal,
+        /** Elo du joueur au moment de la création de la partie (null pour les anciens événements). */
+        Integer myRating,
+        /** Elo de l'adversaire au moment de la création de la partie (null pour les anciens événements). */
+        Integer opponentRating
 ) {
 
     /**
@@ -103,7 +107,9 @@ public record GameResult(
                 myProgress == null ? 0 : myProgress.level(),
                 myProgress == null ? 0 : myProgress.xpTotal(),
                 opponentProgress == null ? 0 : opponentProgress.level(),
-                opponentProgress == null ? 0 : opponentProgress.xpTotal()
+                opponentProgress == null ? 0 : opponentProgress.xpTotal(),
+                myProgress == null ? null : myProgress.rating(),
+                opponentProgress == null ? null : opponentProgress.rating()
         );
     }
 }

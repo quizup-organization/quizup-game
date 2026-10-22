@@ -96,7 +96,7 @@ class GameQueryHandlerTest {
                 "game-1", "topic-1", "player-1", "Alpha", "player-2", "Bravo",
                 "player-1", "player-2", 48, 10, "player-1", false,
                 null,
-                30, 26, 2, 2, 3, 3, 0, 0, 0, 0);
+                30, 26, 2, 2, 3, 3, 0, 0, 0, 0, null, null);
         assertEquals(expected, result);
     }
 
