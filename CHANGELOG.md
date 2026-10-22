@@ -1,3 +1,9 @@
+## [8.7.0](https://github.com/quizup-organization/quizup-game/compare/v8.6.0...v8.7.0) (2026-10-22)
+
+### Features
+
+* **account:** annule les parties actives et anonymise les joueurs supprimés ([6c40ca7](https://github.com/quizup-organization/quizup-game/commit/6c40ca73df7620bfbe63f2b29e86837a335d1d10))
+
 ## [8.6.0](https://github.com/quizup-organization/quizup-game/compare/v8.5.0...v8.6.0) (2026-10-16)
 
 ### Features
