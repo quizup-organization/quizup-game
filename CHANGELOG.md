@@ -1,3 +1,9 @@
+## [8.7.1](https://github.com/quizup-organization/quizup-game/compare/v8.7.0...v8.7.1) (2026-10-22)
+
+### Bug Fixes
+
+* aligne les contrats inter-services sur les releases disponibles ([6ea0516](https://github.com/quizup-organization/quizup-game/commit/6ea0516c7b340f571d09b8f7d035a75f9e5f573f))
+
 ## [8.7.0](https://github.com/quizup-organization/quizup-game/compare/v8.6.0...v8.7.0) (2026-10-22)
 
 ### Features
