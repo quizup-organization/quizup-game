@@ -1,3 +1,13 @@
+## [9.0.0](https://github.com/quizup-organization/quizup-game/compare/v8.7.2...v9.0.0) (2026-10-23)
+
+### ⚠ BREAKING CHANGES
+
+* **game:** limite le snapshot de partie à l'Elo
+
+### Code Refactoring
+
+* **game:** limite le snapshot de partie à l'Elo ([3523f9d](https://github.com/quizup-organization/quizup-game/commit/3523f9d21b28353eeb6333cdfde1292d82f4232e))
+
 ## [8.7.2](https://github.com/quizup-organization/quizup-game/compare/v8.7.1...v8.7.2) (2026-10-22)
 
 ### Bug Fixes
