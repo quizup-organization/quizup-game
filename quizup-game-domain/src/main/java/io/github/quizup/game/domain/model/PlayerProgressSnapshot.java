@@ -1,30 +1,15 @@
 package io.github.quizup.game.domain.model;
 
 /**
- * Snapshot de la progression d'un joueur (niveau + XP totale) au moment de la création d'une
- * partie. Porté par l'agrégat {@code game} afin que l'écran de résultat reflète la progression
- * <b>à l'instant de la partie</b> — et non la progression courante du compte.
+ * Snapshot de l'Elo d'un joueur au moment de la création d'une partie. Porté par l'agrégat
+ * {@code game} afin que l'écran de résultat reflète l'Elo <b>à l'instant de la partie</b> — et
+ * non la valeur courante du compte.
  *
- * <p>Le bot n'a pas de progression : l'appelant fournit un niveau d'affichage dérivé de sa
- * difficulté.</p>
+ * <p>Le bot n'a pas de progression : il reçoit l'Elo de départ pour l'affichage.</p>
  */
-public record PlayerProgressSnapshot(int level, int xpTotal, Integer rating) {
+public record PlayerProgressSnapshot(Integer rating) {
 
-    /** Snapshot historique sans Elo (événements antérieurs au champ). */
-    public PlayerProgressSnapshot(int level, int xpTotal) {
-        this(level, xpTotal, null);
-    }
-
-    /**
-     * Niveau/XP d'<b>affichage</b> du bot selon sa difficulté : le bot n'a pas de progression
-     * réelle, on lui prête un palier pour l'écran de résultat.
-     */
-    public static PlayerProgressSnapshot forBot(BotDifficulty difficulty) {
-        int level = switch (BotDifficulty.fromOrDefault(difficulty)) {
-            case EASY -> 1;
-            case NORMAL -> 3;
-            case HARD -> 5;
-        };
-        return new PlayerProgressSnapshot(level, 100 * (level - 1) * (level - 1), 200);
+    public static PlayerProgressSnapshot forBot() {
+        return new PlayerProgressSnapshot(200);
     }
 }

@@ -20,9 +20,9 @@ utilisateur spécial (`QuizUpConstants.SYSTEM_USER_ID`). **La partie démarre im
 création** (la présence des deux joueurs est garantie en amont par la salle de
 `quizup-matchmaking`) : plus de salle d'attente dans l'agrégat game.
 
-Le `GameCreatedEvent` porte un **snapshot de progression** par joueur (`PlayerProgressSnapshot` :
-niveau + XP totale) fourni à la création : l'écran de résultat affiche la progression **à l'instant
-de la partie** (le bot reçoit un niveau d'affichage dérivé de sa difficulté).
+Le `GameCreatedEvent` porte un **snapshot d'Elo** par joueur (`PlayerProgressSnapshot`) fourni à
+la création : l'écran de résultat affiche l'Elo **à l'instant de la partie** (le bot reçoit
+l'Elo de départ). Le niveau et l'XP globale ne font plus partie du contrat game.
 
 Ce service ne possède **pas** la revanche : rejouer un adversaire passe par un **défi nominatif**
 (`quizup-matchmaking`, `POST /api/challenges`) → salle → partie.

@@ -56,20 +56,8 @@ public class GameEntity {
     @Column(name = "bot_difficulty", length = 10)
     private BotDifficulty botDifficulty;
 
-    @Column(name = "player1_level")
-    private Integer player1Level;
-
-    @Column(name = "player1_xp_total")
-    private Integer player1XpTotal;
-
     @Column(name = "player1_rating")
     private Integer player1Rating;
-
-    @Column(name = "player2_level")
-    private Integer player2Level;
-
-    @Column(name = "player2_xp_total")
-    private Integer player2XpTotal;
 
     @Column(name = "player2_rating")
     private Integer player2Rating;

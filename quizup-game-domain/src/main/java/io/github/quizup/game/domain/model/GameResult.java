@@ -5,8 +5,8 @@ import io.github.quizup.game.domain.exception.GameExceptions;
 import static java.util.Objects.isNull;
 
 /**
- * Résultat d'une partie du point de vue d'un joueur (écran de fin) : identités, scores et
- * statistiques de réponses recalculées depuis les rounds.
+ * Résultat d'une partie du point de vue d'un joueur (écran de fin) : identités, scores,
+ * statistiques de réponses recalculées depuis les rounds et Elo au moment de la partie.
  */
 public record GameResult(
         String gameId,
@@ -28,10 +28,6 @@ public record GameResult(
         int fastAnswers,
         int answeredRounds,
         int totalRounds,
-        int myLevel,
-        int myXpTotal,
-        int opponentLevel,
-        int opponentXpTotal,
         /** Elo du joueur au moment de la création de la partie (null pour les anciens événements). */
         Integer myRating,
         /** Elo de l'adversaire au moment de la création de la partie (null pour les anciens événements). */
@@ -104,10 +100,6 @@ public record GameResult(
                 fastAnswers,
                 answeredRounds,
                 game.rounds().size(),
-                myProgress == null ? 0 : myProgress.level(),
-                myProgress == null ? 0 : myProgress.xpTotal(),
-                opponentProgress == null ? 0 : opponentProgress.level(),
-                opponentProgress == null ? 0 : opponentProgress.xpTotal(),
                 myProgress == null ? null : myProgress.rating(),
                 opponentProgress == null ? null : opponentProgress.rating()
         );

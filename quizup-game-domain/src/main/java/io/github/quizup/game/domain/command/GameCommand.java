@@ -22,7 +22,7 @@ public interface GameCommand {
      * sélection (sujet, langues, nombre) est un I/O inter-service qui ne doit pas s'exécuter
      * dans le handler de commande. L'agrégat ne fait que valider la complétude.</p>
      *
-     * <p>{@code player1Progress}/{@code player2Progress} figent la progression des joueurs à la
+     * <p>{@code player1Progress}/{@code player2Progress} figent l'Elo des joueurs à la
      * création : l'écran de résultat l'affiche au lieu de la progression courante du compte.</p>
      */
     record CreateGameCommand(

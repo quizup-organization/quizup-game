@@ -22,8 +22,8 @@ public final class GameEntityMapper {
                 .player2Name(entity.getPlayer2Name())
                 .opponent(entity.getOpponent())
                 .botDifficulty(entity.getBotDifficulty())
-                .player1Progress(progress(entity.getPlayer1Level(), entity.getPlayer1XpTotal(), entity.getPlayer1Rating()))
-                .player2Progress(progress(entity.getPlayer2Level(), entity.getPlayer2XpTotal(), entity.getPlayer2Rating()))
+                .player1Progress(progress(entity.getPlayer1Rating()))
+                .player2Progress(progress(entity.getPlayer2Rating()))
                 .status(entity.getStatus())
                 .player1Score(entity.getPlayer1Score())
                 .player2Score(entity.getPlayer2Score())
@@ -45,11 +45,7 @@ public final class GameEntityMapper {
         entity.setPlayer2Name(game.player2Name());
         entity.setOpponent(game.opponent());
         entity.setBotDifficulty(game.botDifficulty());
-        entity.setPlayer1Level(level(game.player1Progress()));
-        entity.setPlayer1XpTotal(xpTotal(game.player1Progress()));
         entity.setPlayer1Rating(rating(game.player1Progress()));
-        entity.setPlayer2Level(level(game.player2Progress()));
-        entity.setPlayer2XpTotal(xpTotal(game.player2Progress()));
         entity.setPlayer2Rating(rating(game.player2Progress()));
         entity.setStatus(game.status());
         entity.setPlayer1Score(game.player1Score());
@@ -64,23 +60,12 @@ public final class GameEntityMapper {
         return entity;
     }
 
-    private static PlayerProgressSnapshot progress(Integer level, Integer xpTotal, Integer rating) {
-        if (level == null) {
-            return null;
-        }
-        return new PlayerProgressSnapshot(level, xpTotal == null ? 0 : xpTotal, rating);
+    private static PlayerProgressSnapshot progress(Integer rating) {
+        return rating == null ? null : new PlayerProgressSnapshot(rating);
     }
 
     private static Integer rating(PlayerProgressSnapshot progress) {
         return progress == null ? null : progress.rating();
-    }
-
-    private static Integer level(PlayerProgressSnapshot progress) {
-        return progress == null ? null : progress.level();
-    }
-
-    private static Integer xpTotal(PlayerProgressSnapshot progress) {
-        return progress == null ? null : progress.xpTotal();
     }
 }
 

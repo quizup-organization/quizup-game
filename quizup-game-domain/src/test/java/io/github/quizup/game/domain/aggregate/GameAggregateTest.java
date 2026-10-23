@@ -34,8 +34,8 @@ class GameAggregateTest {
     private static final String TOPIC_ID = "topic-1";
     private static final String PLAYER_1 = "player-1";
     private static final String PLAYER_2 = "player-2";
-    private static final PlayerProgressSnapshot PLAYER_1_PROGRESS = new PlayerProgressSnapshot(2, 150);
-    private static final PlayerProgressSnapshot PLAYER_2_PROGRESS = new PlayerProgressSnapshot(1, 0);
+    private static final PlayerProgressSnapshot PLAYER_1_PROGRESS = new PlayerProgressSnapshot(220);
+    private static final PlayerProgressSnapshot PLAYER_2_PROGRESS = new PlayerProgressSnapshot(200);
 
     private final AggregateTestFixture<GameAggregate> fixture =
             new AggregateTestFixture<>(GameAggregate.class);
